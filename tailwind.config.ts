@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,30 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				care: {
+					50: '#e6f7f7',
+					100: '#ccefef',
+					200: '#99dfdf',
+					300: '#66cfcf',
+					400: '#33bfbf',
+					500: '#00afaf',
+					600: '#008c8c',
+					700: '#006969',
+					800: '#004646',
+					900: '#002323',
+				},
+				impact: {
+					50: '#fff7e6',
+					100: '#ffefcc',
+					200: '#ffdf99',
+					300: '#ffcf66',
+					400: '#ffbf33',
+					500: '#ffaf00',
+					600: '#cc8c00',
+					700: '#996900',
+					800: '#664600',
+					900: '#332300',
 				}
 			},
 			borderRadius: {
@@ -84,11 +109,21 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				fadeIn: {
+					'0%': { opacity: '0' },
+					'100%': { opacity: '1' }
+				},
+				slideUp: {
+					'0%': { transform: 'translateY(20px)', opacity: '0' },
+					'100%': { transform: 'translateY(0)', opacity: '1' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fadeIn 0.5s ease-out forwards',
+				'slide-up': 'slideUp 0.5s ease-out forwards'
 			}
 		}
 	},
