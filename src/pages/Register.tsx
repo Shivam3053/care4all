@@ -25,15 +25,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail, Lock, User, Building, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Building, ArrowRight, Shield, InfoIcon } from "lucide-react";
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client
+// Note: In production, these would be environment variables
+const supabaseUrl = 'https://your-supabase-url.supabase.co';
+const supabaseKey = 'your-supabase-anon-key';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const Register = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState("donor");
+  const [showSuperAdminInfo, setShowSuperAdminInfo] = useState(false);
   
   // Donor form state
   const [donorEmail, setDonorEmail] = useState("");
@@ -47,8 +64,15 @@ const Register = () => {
   const [ngoName, setNgoName] = useState("");
   const [ngoType, setNgoType] = useState("");
   const [ngoAgreeTerms, setNgoAgreeTerms] = useState(false);
+  
+  // Super Admin form state
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminName, setAdminName] = useState("");
+  const [adminSecretCode, setAdminSecretCode] = useState("");
+  const [adminAgreeTerms, setAdminAgreeTerms] = useState(false);
 
-  const handleDonorRegister = (e: React.FormEvent) => {
+  const handleDonorRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!donorName || !donorEmail || !donorPassword) {
@@ -63,15 +87,43 @@ const Register = () => {
 
     setIsLoading(true);
 
-    // Simulate registration process
-    setTimeout(() => {
+    try {
+      // Register user with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email: donorEmail,
+        password: donorPassword,
+        options: {
+          data: {
+            full_name: donorName,
+            role: 'donor',
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      // Create user profile in database
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: data.user?.id,
+          full_name: donorName,
+          email: donorEmail,
+          user_role: 'donor',
+        });
+
+      if (profileError) throw profileError;
+      
       toast.success("Registration successful! Please check your email to verify your account.");
       setIsLoading(false);
       navigate("/login");
-    }, 1500);
+    } catch (error: any) {
+      toast.error(error.message || "Registration failed");
+      setIsLoading(false);
+    }
   };
 
-  const handleNGORegister = (e: React.FormEvent) => {
+  const handleNGORegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!ngoName || !ngoEmail || !ngoPassword || !ngoType) {
@@ -86,12 +138,98 @@ const Register = () => {
 
     setIsLoading(true);
 
-    // Simulate registration process
-    setTimeout(() => {
+    try {
+      // Register NGO with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email: ngoEmail,
+        password: ngoPassword,
+        options: {
+          data: {
+            organization_name: ngoName,
+            role: 'ngo_admin',
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      // Create NGO profile in database
+      const { error: ngoError } = await supabase
+        .from('ngos')
+        .insert({
+          id: data.user?.id,
+          name: ngoName,
+          email: ngoEmail,
+          ngo_type: ngoType,
+          verification_status: 'pending',
+        });
+
+      if (ngoError) throw ngoError;
+      
       toast.success("Registration submitted! Your NGO profile is pending verification.");
       setIsLoading(false);
       navigate("/login");
-    }, 1500);
+    } catch (error: any) {
+      toast.error(error.message || "Registration failed");
+      setIsLoading(false);
+    }
+  };
+
+  const handleSuperAdminRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!adminName || !adminEmail || !adminPassword || !adminSecretCode) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    
+    if (!adminAgreeTerms) {
+      toast.error("You must agree to the terms and conditions");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Verify admin secret code (in a real app, this would be a secure process)
+      if (adminSecretCode !== "CARE4ALL-ADMIN-2023") {
+        throw new Error("Invalid admin registration code");
+      }
+
+      // Register Super Admin with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email: adminEmail,
+        password: adminPassword,
+        options: {
+          data: {
+            full_name: adminName,
+            role: 'super_admin',
+            status: 'pending_approval', // Requires manual approval
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      // Create admin profile in database
+      const { error: adminError } = await supabase
+        .from('admins')
+        .insert({
+          id: data.user?.id,
+          full_name: adminName,
+          email: adminEmail,
+          status: 'pending_approval',
+        });
+
+      if (adminError) throw adminError;
+      
+      toast.success("Super Admin registration submitted! Your account will be reviewed by existing administrators.");
+      setIsLoading(false);
+      navigate("/login");
+    } catch (error: any) {
+      toast.error(error.message || "Registration failed");
+      setIsLoading(false);
+    }
   };
 
   const togglePassword = () => {
@@ -109,9 +247,10 @@ const Register = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="donor" onValueChange={setUserType}>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="donor">Donor</TabsTrigger>
               <TabsTrigger value="ngo">NGO</TabsTrigger>
+              <TabsTrigger value="admin">Admin</TabsTrigger>
             </TabsList>
 
             <TabsContent value="donor">
@@ -299,6 +438,147 @@ const Register = () => {
                 
                 <p className="text-sm text-muted-foreground text-center">
                   Your organization will be verified before being listed on Care4All
+                </p>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="admin">
+              <Alert className="mb-4">
+                <AlertDescription className="flex items-start">
+                  <InfoIcon className="mr-2 h-4 w-4 mt-0.5 shrink-0" />
+                  <span>
+                    Super Admin registration is restricted. You will need an approval code and will be subject to verification.
+                  </span>
+                </AlertDescription>
+              </Alert>
+
+              <form onSubmit={handleSuperAdminRegister} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="adminName">Full Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="adminName"
+                      placeholder="Admin Full Name"
+                      value={adminName}
+                      onChange={(e) => setAdminName(e.target.value)}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="adminEmail">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="adminEmail"
+                      type="email"
+                      placeholder="admin@example.com"
+                      value={adminEmail}
+                      onChange={(e) => setAdminEmail(e.target.value)}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="adminPassword">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="adminPassword"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Create a secure password"
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                      className="pl-10 pr-10"
+                      required
+                    />
+                    <button 
+                      type="button"
+                      onClick={togglePassword}
+                      className="absolute right-3 top-3 text-muted-foreground"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="adminSecretCode">Admin Registration Code</Label>
+                    <Dialog open={showSuperAdminInfo} onOpenChange={setShowSuperAdminInfo}>
+                      <DialogTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <InfoIcon className="h-4 w-4" />
+                          <span className="sr-only">Info</span>
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>About Super Admin Registration</DialogTitle>
+                          <DialogDescription>
+                            Super Admin registration requires a valid registration code. This code is provided only to authorized personnel who will manage the Care4All platform. Your registration will be subject to manual verification by existing administrators.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="flex flex-col space-y-2 mt-4">
+                          <p className="text-sm font-medium">Super Admin Responsibilities:</p>
+                          <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
+                            <li>Verify and approve NGO registrations</li>
+                            <li>Monitor donations and platform activity</li>
+                            <li>Manage users and handle reports</li>
+                            <li>Review and approve fundraising campaigns</li>
+                            <li>Access and analyze platform metrics</li>
+                          </ul>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <div className="relative">
+                    <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="adminSecretCode"
+                      type="password"
+                      placeholder="Enter registration code"
+                      value={adminSecretCode}
+                      onChange={(e) => setAdminSecretCode(e.target.value)}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="adminTerms" 
+                    checked={adminAgreeTerms} 
+                    onCheckedChange={() => setAdminAgreeTerms(!adminAgreeTerms)} 
+                  />
+                  <label
+                    htmlFor="adminTerms"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    I agree to the{" "}
+                    <Link to="/terms" className="text-primary hover:underline">
+                      terms and conditions
+                    </Link>
+                    {" "}and understand my responsibilities
+                  </label>
+                </div>
+                
+                <Button type="submit" disabled={isLoading} className="w-full">
+                  {isLoading ? "Submitting..." : "Request Admin Access"}
+                </Button>
+                
+                <p className="text-sm text-muted-foreground text-center">
+                  Your application will be reviewed by existing administrators
                 </p>
               </form>
             </TabsContent>

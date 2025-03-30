@@ -15,13 +15,20 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client
+// Note: In production, these would be environment variables
+const supabaseUrl = 'https://your-supabase-url.supabase.co';
+const supabaseKey = 'your-supabase-anon-key';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email) {
@@ -31,12 +38,21 @@ const ForgotPassword = () => {
 
     setIsLoading(true);
 
-    // Simulate password reset request
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      // Send password reset email through Supabase
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+
+      if (error) throw error;
+      
       setIsSubmitted(true);
       toast.success("Password reset instructions sent to your email");
-    }, 1500);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send reset instructions");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
