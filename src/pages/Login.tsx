@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,17 +14,10 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase client
-// Note: In production, these would be environment variables
-const supabaseUrl = 'https://your-supabase-url.supabase.co';
-const supabaseKey = 'your-supabase-anon-key';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,77 +30,11 @@ const Login = () => {
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      // Sign in with Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      // Get user profile to determine their role
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_role')
-        .eq('id', data.user.id)
-        .single();
-
-      if (profileError) {
-        // If profile not found in profiles, check NGOs table
-        const { data: ngo, error: ngoError } = await supabase
-          .from('ngos')
-          .select('verification_status')
-          .eq('id', data.user.id)
-          .single();
-
-        if (ngoError) {
-          // If not found in NGOs either, check admins table
-          const { data: admin, error: adminError } = await supabase
-            .from('admins')
-            .select('status')
-            .eq('id', data.user.id)
-            .single();
-
-          if (adminError) {
-            throw new Error("User profile not found");
-          }
-
-          // Handle admin login
-          if (admin.status === 'pending_approval') {
-            throw new Error("Your admin account is pending approval");
-          }
-          
-          toast.success("Welcome back, Admin!");
-          navigate("/admin/dashboard");
-          return;
-        }
-
-        // Handle NGO login
-        if (ngo.verification_status === 'pending') {
-          toast.warning("Your NGO is pending verification. Limited access granted.");
-        }
-
-        toast.success("Welcome back to your NGO dashboard!");
-        navigate("/ngo/dashboard");
-        return;
-      }
-
-      // Handle regular user login
-      if (profile.user_role === 'donor') {
-        toast.success("Welcome back to Care4All!");
-        navigate("/dashboard");
-      } else {
-        // Fallback for any other role
-        toast.success("Login successful!");
-        navigate("/dashboard");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Login failed");
-    } finally {
-      setIsLoading(false);
+      await signIn(email, password);
+    } catch (error) {
+      // Error handling is done in the auth context
+      console.error("Login error:", error);
     }
   };
 

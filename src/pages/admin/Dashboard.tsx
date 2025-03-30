@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +27,7 @@ import {
 } from "lucide-react";
 import { createClient } from '@supabase/supabase-js';
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Initialize Supabase client
 // Note: In production, these would be environment variables
@@ -37,43 +37,25 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { user, hasPermission } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pendingNGOs, setPendingNGOs] = useState([]);
   const [users, setUsers] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   
-  // Check if user is authenticated and has admin role
+  // Check permissions and fetch data
   useEffect(() => {
-    const checkAuth = async () => {
+    const fetchData = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          // User not logged in
-          setIsAuthenticated(false);
-          setIsLoading(false);
+        if (!hasPermission('admin_dashboard')) {
+          // User doesn't have admin permissions, this is a fallback
+          // The ProtectedRoute should already handle this
+          navigate('/');
           return;
         }
-        
-        // Check if user is an admin
-        const { data: adminData, error: adminError } = await supabase
-          .from('admins')
-          .select('status')
-          .eq('id', user.id)
-          .single();
-          
-        if (adminError || adminData?.status !== 'approved') {
-          // User is not an approved admin
-          setIsAuthenticated(false);
-          setIsLoading(false);
-          return;
-        }
-        
-        setIsAuthenticated(true);
-        
+
         // Fetch pending NGOs
         const { data: ngos } = await supabase
           .from('ngos')
@@ -96,18 +78,24 @@ const AdminDashboard = () => {
           
         setCampaigns(allCampaigns || []);
       } catch (error) {
-        console.error("Error checking authentication:", error);
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load admin dashboard data");
       } finally {
         setIsLoading(false);
       }
     };
     
-    checkAuth();
-  }, []);
+    fetchData();
+  }, [navigate, hasPermission]);
   
   // Handle NGO approval
   const handleNGOApproval = async (ngoId, status) => {
     try {
+      if (!hasPermission('approve_ngo')) {
+        toast.error("You don't have permission to approve NGOs");
+        return;
+      }
+
       const { error } = await supabase
         .from('ngos')
         .update({ verification_status: status })
@@ -129,6 +117,11 @@ const AdminDashboard = () => {
   // Handle campaign approval
   const handleCampaignApproval = async (campaignId, status) => {
     try {
+      if (!hasPermission('manage_campaigns')) {
+        toast.error("You don't have permission to manage campaigns");
+        return;
+      }
+
       const { error } = await supabase
         .from('campaigns')
         .update({ status })
@@ -162,26 +155,6 @@ const AdminDashboard = () => {
     return (
       <div className="container py-12 flex justify-center">
         <p>Loading...</p>
-      </div>
-    );
-  }
-  
-  if (!isAuthenticated) {
-    return (
-      <div className="container flex min-h-[80vh] flex-col items-center justify-center py-12 text-center">
-        <AlertCircle className="mb-4 h-12 w-12 text-destructive" />
-        <h1 className="mb-2 text-2xl font-bold">Access Denied</h1>
-        <p className="mb-6 text-muted-foreground">
-          You don't have permission to access the Admin Dashboard.
-        </p>
-        <div className="flex gap-4">
-          <Button asChild>
-            <a href="/login">Sign In</a>
-          </Button>
-          <Button variant="outline" asChild>
-            <a href="/">Return Home</a>
-          </Button>
-        </div>
       </div>
     );
   }

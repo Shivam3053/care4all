@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,17 +36,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock, User, Building, ArrowRight, Shield, InfoIcon } from "lucide-react";
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase client
-// Note: In production, these would be environment variables
-const supabaseUrl = 'https://your-supabase-url.supabase.co';
-const supabaseKey = 'your-supabase-anon-key';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { useAuth } from "@/contexts/AuthContext";
 
 const Register = () => {
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const { registerDonor, registerNGO, registerSuperAdmin, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState("donor");
   const [showSuperAdminInfo, setShowSuperAdminInfo] = useState(false);
@@ -85,41 +77,11 @@ const Register = () => {
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      // Register user with Supabase
-      const { data, error } = await supabase.auth.signUp({
-        email: donorEmail,
-        password: donorPassword,
-        options: {
-          data: {
-            full_name: donorName,
-            role: 'donor',
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      // Create user profile in database
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: data.user?.id,
-          full_name: donorName,
-          email: donorEmail,
-          user_role: 'donor',
-        });
-
-      if (profileError) throw profileError;
-      
-      toast.success("Registration successful! Please check your email to verify your account.");
-      setIsLoading(false);
-      navigate("/login");
-    } catch (error: any) {
-      toast.error(error.message || "Registration failed");
-      setIsLoading(false);
+      await registerDonor(donorEmail, donorPassword, donorName);
+    } catch (error) {
+      // Error handling is done in the auth context
+      console.error("Donor registration error:", error);
     }
   };
 
@@ -136,42 +98,11 @@ const Register = () => {
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      // Register NGO with Supabase
-      const { data, error } = await supabase.auth.signUp({
-        email: ngoEmail,
-        password: ngoPassword,
-        options: {
-          data: {
-            organization_name: ngoName,
-            role: 'ngo_admin',
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      // Create NGO profile in database
-      const { error: ngoError } = await supabase
-        .from('ngos')
-        .insert({
-          id: data.user?.id,
-          name: ngoName,
-          email: ngoEmail,
-          ngo_type: ngoType,
-          verification_status: 'pending',
-        });
-
-      if (ngoError) throw ngoError;
-      
-      toast.success("Registration submitted! Your NGO profile is pending verification.");
-      setIsLoading(false);
-      navigate("/login");
-    } catch (error: any) {
-      toast.error(error.message || "Registration failed");
-      setIsLoading(false);
+      await registerNGO(ngoEmail, ngoPassword, ngoName, ngoType);
+    } catch (error) {
+      // Error handling is done in the auth context
+      console.error("NGO registration error:", error);
     }
   };
 
@@ -188,47 +119,11 @@ const Register = () => {
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      // Verify admin secret code (in a real app, this would be a secure process)
-      if (adminSecretCode !== "CARE4ALL-ADMIN-2023") {
-        throw new Error("Invalid admin registration code");
-      }
-
-      // Register Super Admin with Supabase
-      const { data, error } = await supabase.auth.signUp({
-        email: adminEmail,
-        password: adminPassword,
-        options: {
-          data: {
-            full_name: adminName,
-            role: 'super_admin',
-            status: 'pending_approval', // Requires manual approval
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      // Create admin profile in database
-      const { error: adminError } = await supabase
-        .from('admins')
-        .insert({
-          id: data.user?.id,
-          full_name: adminName,
-          email: adminEmail,
-          status: 'pending_approval',
-        });
-
-      if (adminError) throw adminError;
-      
-      toast.success("Super Admin registration submitted! Your account will be reviewed by existing administrators.");
-      setIsLoading(false);
-      navigate("/login");
-    } catch (error: any) {
-      toast.error(error.message || "Registration failed");
-      setIsLoading(false);
+      await registerSuperAdmin(adminEmail, adminPassword, adminName, adminSecretCode);
+    } catch (error) {
+      // Error handling is done in the auth context
+      console.error("Super Admin registration error:", error);
     }
   };
 
