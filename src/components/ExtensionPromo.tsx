@@ -1,6 +1,5 @@
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ExtensionDemo from "./ExtensionDemo";
@@ -70,12 +69,7 @@ const ExtensionPromo = () => {
           </div>
           
           <div className="relative">
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="w-full max-w-[300px] mx-auto"
-            >
+            <div className="w-full max-w-[300px] mx-auto transition-all duration-500 opacity-100 transform translate-y-0">
               <Card className="shadow-xl border-2">
                 <CardContent className="p-0">
                   <img 
@@ -91,35 +85,25 @@ const ExtensionPromo = () => {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
             
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="absolute -bottom-12 -left-12 hidden md:block"
-            >
+            <div className="absolute -bottom-12 -left-12 hidden md:block transition-all duration-500 opacity-100 transform scale-100">
               <Card className="w-32 shadow-lg">
                 <CardContent className="p-3 text-center">
                   <div className="text-xl font-bold text-primary">100%</div>
                   <p className="text-xs">Verified</p>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
             
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-              className="absolute -top-8 -right-8 hidden md:block"
-            >
+            <div className="absolute -top-8 -right-8 hidden md:block transition-all duration-500 opacity-100 transform scale-100">
               <Card className="w-40 shadow-lg">
                 <CardContent className="p-3 text-center">
                   <div className="text-xl font-bold text-primary">Coming Soon</div>
                   <p className="text-xs">Join the waitlist</p>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

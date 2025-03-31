@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,82 +25,106 @@ import {
   Users, 
   X 
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+
+const mockNGOs = [
+  {
+    id: "1",
+    name: "Children First Foundation",
+    ngo_type: "children",
+    email: "contact@childrenfirst.org",
+    created_at: "2023-06-15T10:30:00Z",
+    verification_status: "pending"
+  },
+  {
+    id: "2",
+    name: "EcoLife Initiative",
+    ngo_type: "environment",
+    email: "info@ecolife.org",
+    created_at: "2023-07-22T14:15:00Z",
+    verification_status: "pending"
+  }
+];
+
+const mockUsers = [
+  {
+    id: "1",
+    full_name: "John Doe",
+    email: "john@example.com",
+    user_role: "donor",
+    created_at: "2023-05-10T08:00:00Z"
+  },
+  {
+    id: "2",
+    full_name: "Jane Smith",
+    email: "jane@example.com",
+    user_role: "ngo_admin",
+    created_at: "2023-05-15T09:30:00Z"
+  },
+  {
+    id: "3",
+    full_name: "Admin User",
+    email: "admin@care4all.org",
+    user_role: "super_admin",
+    created_at: "2023-04-01T10:00:00Z"
+  }
+];
+
+const mockCampaigns = [
+  {
+    id: "1",
+    title: "Clean Water Initiative",
+    ngo_name: "EcoLife Initiative",
+    goal_amount: 50000,
+    status: "pending"
+  },
+  {
+    id: "2",
+    title: "Education for All",
+    ngo_name: "Children First Foundation",
+    goal_amount: 75000,
+    status: "approved"
+  },
+  {
+    id: "3",
+    title: "Healthcare Outreach",
+    ngo_name: "Hope Healthcare",
+    goal_amount: 100000,
+    status: "pending"
+  }
+];
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, hasPermission } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-  const [pendingNGOs, setPendingNGOs] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [campaigns, setCampaigns] = useState([]);
+  const [pendingNGOs, setPendingNGOs] = useState(mockNGOs);
+  const [users, setUsers] = useState(mockUsers);
+  const [campaigns, setCampaigns] = useState(mockCampaigns);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   
-  // Check permissions and fetch data
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!hasPermission('admin_dashboard')) {
-          // User doesn't have admin permissions, this is a fallback
-          // The ProtectedRoute should already handle this
-          navigate('/');
-          return;
-        }
-
-        // Fetch pending NGOs
-        const { data: ngos, error: ngoError } = await supabase
-          .from('ngos')
-          .select('*')
-          .eq('verification_status', 'pending');
-          
-        if (ngoError) throw ngoError;
-        setPendingNGOs(ngos || []);
-        
-        // Fetch users
-        const { data: allUsers, error: userError } = await supabase
-          .from('profiles')
-          .select('*');
-          
-        if (userError) throw userError;
-        setUsers(allUsers || []);
-        
-        // Fetch campaigns
-        const { data: allCampaigns, error: campaignError } = await supabase
-          .from('campaigns')
-          .select('*');
-          
-        if (campaignError) throw campaignError;
-        setCampaigns(allCampaigns || []);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load admin dashboard data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (!hasPermission('admin_dashboard')) {
+      navigate('/');
+      return;
+    }
     
-    fetchData();
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
   }, [navigate, hasPermission]);
   
-  // Handle NGO approval
-  const handleNGOApproval = async (ngoId, status) => {
+  const handleNGOApproval = (ngoId, status) => {
     try {
       if (!hasPermission('approve_ngo')) {
         toast.error("You don't have permission to approve NGOs");
         return;
       }
 
-      const { error } = await supabase
-        .from('ngos')
-        .update({ verification_status: status })
-        .eq('id', ngoId);
-        
-      if (error) throw error;
-      
-      // Update local state
       setPendingNGOs(prevNGOs => 
         prevNGOs.filter(ngo => ngo.id !== ngoId)
       );
@@ -113,22 +136,13 @@ const AdminDashboard = () => {
     }
   };
   
-  // Handle campaign approval
-  const handleCampaignApproval = async (campaignId, status) => {
+  const handleCampaignApproval = (campaignId, status) => {
     try {
       if (!hasPermission('manage_campaigns')) {
         toast.error("You don't have permission to manage campaigns");
         return;
       }
 
-      const { error } = await supabase
-        .from('campaigns')
-        .update({ status })
-        .eq('id', campaignId);
-        
-      if (error) throw error;
-      
-      // Update local state
       setCampaigns(prevCampaigns => 
         prevCampaigns.map(campaign => 
           campaign.id === campaignId ? { ...campaign, status } : campaign
@@ -142,7 +156,6 @@ const AdminDashboard = () => {
     }
   };
   
-  // Filter users based on search term and active filter
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           user.email?.toLowerCase().includes(searchTerm.toLowerCase());
