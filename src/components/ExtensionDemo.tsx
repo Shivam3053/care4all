@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,8 @@ import {
   QrCode,
   Phone, 
   Mail, 
-  CheckCircle2
+  CheckCircle2,
+  X
 } from "lucide-react";
 import WhatsappIcon from "./icons/WhatsappIcon";
 
@@ -64,20 +66,20 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
-      <Card className="w-full max-w-[350px] shadow-lg border-2 relative">
+      <Card className="w-full max-w-[350px] shadow-lg border-2 relative bg-gray-900 text-white dark:bg-gray-900">
         {onClose && (
           <button 
             onClick={onClose}
-            className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+            className="absolute top-3 right-3 text-gray-400 hover:text-white z-10"
             aria-label="Close"
           >
-            ✕
+            <X className="h-5 w-5" />
           </button>
         )}
         
-        <CardHeader className="border-b pb-3">
+        <CardHeader className="border-b border-gray-700 pb-3 pt-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-md overflow-hidden">
+            <div className="h-12 w-12 rounded-md overflow-hidden">
               <img 
                 src={mockNGO.logo} 
                 alt={`${mockNGO.name} logo`} 
@@ -85,7 +87,7 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
               />
             </div>
             <div>
-              <CardTitle className="text-base font-medium">
+              <CardTitle className="text-base font-medium text-white">
                 {mockNGO.name}
               </CardTitle>
               <Badge className="bg-green-600 text-white mt-1 text-xs">
@@ -95,35 +97,35 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
           </div>
         </CardHeader>
         
-        <CardContent className="pt-4 space-y-4">
+        <CardContent className="pt-4 space-y-4 pb-4">
           <div className="space-y-2">
-            <h3 className="text-sm font-medium flex items-center gap-1">
-              <QrCode className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium flex items-center gap-1 text-gray-300">
+              <QrCode className="h-4 w-4 text-gray-400" />
               QR Code for UPI Donation
             </h3>
             <div className="flex justify-center">
-              <div className="border p-2 rounded-md bg-white">
+              <div className="border border-gray-700 p-2 rounded-md bg-white">
                 <img 
                   src={mockNGO.qrCode} 
                   alt="UPI QR Code" 
-                  className="w-[120px] h-[120px]" 
+                  className="w-[130px] h-[130px]" 
                 />
               </div>
             </div>
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">UPI ID</h3>
+            <h3 className="text-sm font-medium text-gray-300">UPI ID</h3>
             <div className="flex">
               <Input 
                 value={mockNGO.upiId} 
                 readOnly 
-                className="rounded-r-none bg-muted"
+                className="rounded-r-none bg-gray-800 border-gray-700 text-white"
               />
               <Button 
                 variant="secondary" 
                 size="sm"
-                className="rounded-l-none"
+                className="rounded-l-none bg-gray-700 hover:bg-gray-600"
                 onClick={() => handleCopy(mockNGO.upiId, "UPI ID")}
               >
                 {copied === "UPI ID" ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -132,32 +134,32 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">Contact Info</h3>
+            <h3 className="text-sm font-medium text-gray-300">Contact Info</h3>
             <div className="space-y-2">
               <div className="flex items-center">
                 <div className="flex gap-2 items-center flex-1">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{mockNGO.phone}</span>
+                  <Phone className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm text-gray-200">{mockNGO.phone}</span>
                 </div>
                 <div className="flex gap-1">
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="h-8 w-8"
+                    className="h-8 w-8 border-gray-700 bg-transparent hover:bg-gray-800"
                     onClick={handleWhatsApp}
                   >
-                    <WhatsappIcon className="h-4 w-4 text-green-600" />
+                    <WhatsappIcon className="h-4 w-4 text-green-500" />
                   </Button>
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="h-8 w-8"
+                    className="h-8 w-8 border-gray-700 bg-transparent hover:bg-gray-800"
                     onClick={() => handleCopy(mockNGO.phone, "Phone")}
                   >
                     {copied === "Phone" ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
                     ) : (
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-4 w-4 text-gray-200" />
                     )}
                   </Button>
                 </div>
@@ -165,19 +167,19 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
               
               <div className="flex items-center">
                 <div className="flex gap-2 items-center flex-1">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{mockNGO.email}</span>
+                  <Mail className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm text-gray-200">{mockNGO.email}</span>
                 </div>
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  className="h-8 w-8"
+                  className="h-8 w-8 border-gray-700 bg-transparent hover:bg-gray-800"
                   onClick={() => handleCopy(mockNGO.email, "Email")}
                 >
                   {copied === "Email" ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
                   ) : (
-                    <Copy className="h-4 w-4" />
+                    <Copy className="h-4 w-4 text-gray-200" />
                   )}
                 </Button>
               </div>
@@ -186,7 +188,7 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
           
           <div className="pt-2 space-y-2">
             <Button 
-              className="w-full"
+              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white"
               onClick={handleViewOnCare4All}
             >
               <ExternalLink className="mr-2 h-4 w-4" />
@@ -194,7 +196,7 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
             </Button>
             <Button 
               variant="outline" 
-              className="w-full text-destructive"
+              className="w-full border-gray-700 bg-transparent hover:bg-gray-800 text-red-400 hover:text-red-300"
               onClick={handleReportInfo}
             >
               <Flag className="mr-2 h-4 w-4" />
@@ -202,7 +204,7 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
             </Button>
           </div>
           
-          <div className="text-xs text-muted-foreground text-center pt-2">
+          <div className="text-xs text-gray-500 text-center pt-2">
             Powered by Care4All NGO Analyzer
           </div>
         </CardContent>
