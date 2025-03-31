@@ -50,11 +50,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           setIsAuthenticated(true);
           setTimeout(() => {
-            fetchUserProfile(session.user.id);
+            getUserDataFromMetadata(session.user);
           }, 0);
         } else {
           setUser(null);
           setIsAuthenticated(false);
+          setIsLoading(false);
         }
       }
     );
@@ -64,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       if (session?.user) {
         setIsAuthenticated(true);
-        fetchUserProfile(session.user.id);
+        getUserDataFromMetadata(session.user);
       } else {
         setIsLoading(false);
       }
@@ -73,71 +74,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUserProfile = async (userId: string) => {
+  const getUserDataFromMetadata = (user: User) => {
     try {
-      // Check profiles table (for donors)
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (!profileError && profile) {
+      const metadata = user.user_metadata;
+      
+      if (!metadata) {
         setUser({
-          id: userId,
-          email: profile.email,
-          role: profile.user_role as UserRole,
-          name: profile.full_name,
+          id: user.id,
+          email: user.email || '',
+          role: 'guest'
         });
         setIsLoading(false);
         return;
       }
 
-      // Check NGOs table
-      const { data: ngo, error: ngoError } = await supabase
-        .from('ngos')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (!ngoError && ngo) {
-        setUser({
-          id: userId,
-          email: ngo.email,
-          role: 'ngo_admin',
-          name: ngo.name,
-          organization: ngo.name,
-          verification_status: ngo.verification_status as VerificationStatus,
-        });
-        setIsLoading(false);
-        return;
+      // Extract user information from metadata
+      const role = metadata.user_role as UserRole || 'guest';
+      
+      const userObject: AuthUser = {
+        id: user.id,
+        email: user.email || '',
+        role: role,
+        name: metadata.full_name || metadata.organization_name,
+      };
+      
+      // Add organization info for NGOs
+      if (role === 'ngo_admin') {
+        userObject.organization = metadata.organization_name;
+        userObject.verification_status = 'pending'; // Default for new NGOs
       }
-
-      // Check admins table
-      const { data: admin, error: adminError } = await supabase
-        .from('admins')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (!adminError && admin) {
-        setUser({
-          id: userId,
-          email: admin.email,
-          role: 'super_admin',
-          name: admin.full_name,
-          verification_status: admin.status as VerificationStatus,
-        });
-        setIsLoading(false);
-        return;
+      
+      // Add verification status for admins
+      if (role === 'super_admin') {
+        userObject.verification_status = 'pending'; // Default for new admins
       }
-
-      // If no profile found
-      setUser(null);
-      setIsAuthenticated(false);
+      
+      setUser(userObject);
       setIsLoading(false);
     } catch (error) {
-      console.error("Error fetching user profile:", error);
+      console.error("Error processing user metadata:", error);
+      setUser(null);
+      setIsAuthenticated(false);
       setIsLoading(false);
     }
   };
@@ -263,7 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: {
             full_name: name,
             user_role: 'super_admin',
-            status: 'pending_approval', // Requires manual approval
+            status: 'pending', // Requires manual approval
           }
         }
       });

@@ -5,10 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Heart, CreditCard, Clock, BarChart3, AlertCircle, Filter } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
-// This is a placeholder dashboard - in a real app, this would be connected to a backend
 const Dashboard = () => {
-  const [isAuthenticated] = useState(true); // This would be from auth context in a real app
+  const { isAuthenticated, user } = useAuth();
   
   // Placeholder data for the dashboard
   const recentDonations = [
@@ -46,6 +46,32 @@ const Dashboard = () => {
   return (
     <div className="container py-12">
       <h1 className="mb-6 text-3xl font-bold">My Dashboard</h1>
+      
+      {user?.role === 'ngo_admin' && user?.verification_status === 'pending' && (
+        <Card className="mb-6 border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-5 w-5 text-yellow-600" />
+              <p className="text-yellow-800 dark:text-yellow-300">
+                Your NGO account is pending verification. Once approved, you'll have access to all features.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {user?.role === 'super_admin' && user?.verification_status === 'pending' && (
+        <Card className="mb-6 border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-5 w-5 text-yellow-600" />
+              <p className="text-yellow-800 dark:text-yellow-300">
+                Your admin account is pending approval. You'll be notified once your access is granted.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="mb-8 grid gap-4 md:grid-cols-3">
         <Card>
@@ -178,7 +204,7 @@ const Dashboard = () => {
               <div className="space-y-2">
                 <h3 className="text-lg font-medium">Profile Information</h3>
                 <p className="text-sm text-muted-foreground">
-                  Rahul Gupta • rahul.gupta@example.com
+                  {user?.name || 'User'} • {user?.email}
                 </p>
                 <Button variant="outline" size="sm">
                   Edit Profile
