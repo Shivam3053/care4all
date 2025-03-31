@@ -251,8 +251,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
-      // Verify admin secret code (in a real app, this would be a secure process)
-      if (secretCode !== "CARE4ALL-ADMIN-2023") {
+      // For development purposes, make the code a simple one
+      if (secretCode !== "admin123") {
         throw new Error("Invalid admin registration code");
       }
 

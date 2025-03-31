@@ -342,7 +342,7 @@ const Register = () => {
                 <AlertDescription className="flex items-start">
                   <InfoIcon className="mr-2 h-4 w-4 mt-0.5 shrink-0" />
                   <span>
-                    Super Admin registration is restricted. You will need an approval code and will be subject to verification.
+                    Super Admin registration code: <strong>admin123</strong>
                   </span>
                 </AlertDescription>
               </Alert>
@@ -440,7 +440,7 @@ const Register = () => {
                     <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="adminSecretCode"
-                      type="password"
+                      type="text"
                       placeholder="Enter registration code"
                       value={adminSecretCode}
                       onChange={(e) => setAdminSecretCode(e.target.value)}
