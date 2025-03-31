@@ -2,15 +2,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase client
-// Note: In production, these would be environment variables
-const supabaseUrl = 'https://your-supabase-url.supabase.co';
-const supabaseKey = 'your-supabase-anon-key';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from "@/integrations/supabase/client";
+import { User, Session } from '@supabase/supabase-js';
 
 type UserRole = 'donor' | 'ngo_admin' | 'super_admin' | 'guest';
+type VerificationStatus = 'pending' | 'approved' | 'rejected';
 
 interface AuthUser {
   id: string;
@@ -18,11 +14,12 @@ interface AuthUser {
   role: UserRole;
   name?: string;
   organization?: string;
-  verification_status?: 'pending' | 'approved' | 'rejected';
+  verification_status?: VerificationStatus;
 }
 
 interface AuthContextType {
   user: AuthUser | null;
+  session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
@@ -38,103 +35,112 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for existing session on component mount
-    const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (session) {
-          const { data: { user: authUser } } = await supabase.auth.getUser();
-
-          if (authUser) {
-            // Fetch user profile based on role
-            let userRole: UserRole = 'guest';
-            let userData = null;
-
-            // Check profiles table (for donors)
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', authUser.id)
-              .single();
-
-            if (!profileError && profile) {
-              userRole = profile.user_role as UserRole;
-              userData = profile;
-            } else {
-              // Check NGOs table
-              const { data: ngo, error: ngoError } = await supabase
-                .from('ngos')
-                .select('*')
-                .eq('id', authUser.id)
-                .single();
-
-              if (!ngoError && ngo) {
-                userRole = 'ngo_admin';
-                userData = ngo;
-              } else {
-                // Check admins table
-                const { data: admin, error: adminError } = await supabase
-                  .from('admins')
-                  .select('*')
-                  .eq('id', authUser.id)
-                  .single();
-
-                if (!adminError && admin) {
-                  userRole = 'super_admin';
-                  userData = admin;
-                }
-              }
-            }
-
-            if (userData) {
-              setUser({
-                id: authUser.id,
-                email: authUser.email || '',
-                role: userRole,
-                name: userData.full_name || userData.name,
-                organization: userData.organization_name,
-                verification_status: userData.verification_status || userData.status,
-              });
-              setIsAuthenticated(true);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Session check error:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkSession();
-
-    // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        // User just signed in - similar logic as above, but we don't set isLoading
-        const { data: { user: authUser } } = await supabase.auth.getUser();
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
         
-        if (authUser) {
-          // Fetch user profile
-          // (Similar code as above to determine user role and data)
-          // ...
+        // Don't fetch profile data in the callback to prevent authentication deadlocks
+        if (session?.user) {
+          setIsAuthenticated(true);
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 0);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
         }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setIsAuthenticated(false);
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        setIsAuthenticated(true);
+        fetchUserProfile(session.user.id);
+      } else {
+        setIsLoading(false);
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      // Check profiles table (for donors)
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (!profileError && profile) {
+        setUser({
+          id: userId,
+          email: profile.email,
+          role: profile.user_role as UserRole,
+          name: profile.full_name,
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Check NGOs table
+      const { data: ngo, error: ngoError } = await supabase
+        .from('ngos')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (!ngoError && ngo) {
+        setUser({
+          id: userId,
+          email: ngo.email,
+          role: 'ngo_admin',
+          name: ngo.name,
+          organization: ngo.name,
+          verification_status: ngo.verification_status as VerificationStatus,
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Check admins table
+      const { data: admin, error: adminError } = await supabase
+        .from('admins')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (!adminError && admin) {
+        setUser({
+          id: userId,
+          email: admin.email,
+          role: 'super_admin',
+          name: admin.full_name,
+          verification_status: admin.status as VerificationStatus,
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // If no profile found
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      setIsLoading(false);
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -146,84 +152,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      // Get user profile to determine their role
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
-
-      if (!profileError && profile) {
-        setUser({
-          id: data.user.id,
-          email: data.user.email || '',
-          role: profile.user_role as UserRole,
-          name: profile.full_name,
-        });
-        setIsAuthenticated(true);
-        
-        toast.success(`Welcome back, ${profile.full_name}!`);
-        navigate('/dashboard');
-        return;
-      }
-
-      // If profile not found, check NGOs table
-      const { data: ngo, error: ngoError } = await supabase
-        .from('ngos')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
-
-      if (!ngoError && ngo) {
-        setUser({
-          id: data.user.id,
-          email: data.user.email || '',
-          role: 'ngo_admin',
-          name: ngo.name,
-          organization: ngo.name,
-          verification_status: ngo.verification_status,
-        });
-        setIsAuthenticated(true);
-        
-        if (ngo.verification_status === 'pending') {
-          toast.warning("Your NGO is pending verification. Limited access granted.");
-        } else {
-          toast.success("Welcome back to your NGO dashboard!");
-        }
-        
-        navigate('/ngo/dashboard');
-        return;
-      }
-
-      // If not found in NGOs, check admins table
-      const { data: admin, error: adminError } = await supabase
-        .from('admins')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
-
-      if (!adminError && admin) {
-        if (admin.status === 'pending_approval') {
-          throw new Error("Your admin account is pending approval");
-        }
-        
-        setUser({
-          id: data.user.id,
-          email: data.user.email || '',
-          role: 'super_admin',
-          name: admin.full_name,
-          verification_status: admin.status,
-        });
-        setIsAuthenticated(true);
-        
-        toast.success("Welcome back, Admin!");
-        navigate('/admin/dashboard');
-        return;
-      }
-
-      // If we get here, the user exists in auth but not in any profile table
-      throw new Error("User profile not found. Please contact support.");
-
+      // Auth listener will handle setting the user state
+      toast.success("Successfully signed in!");
     } catch (error: any) {
       toast.error(error.message || "Login failed");
       console.error("Sign in error:", error);
@@ -236,8 +166,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       await supabase.auth.signOut();
-      setUser(null);
-      setIsAuthenticated(false);
       toast.success("You have been signed out");
       navigate('/');
     } catch (error: any) {
@@ -268,31 +196,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
-      // Register user with Supabase
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: name,
-            role: 'donor',
+            user_role: 'donor',
           }
         }
       });
 
       if (error) throw error;
-
-      // Create user profile in database
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: data.user?.id,
-          full_name: name,
-          email: email,
-          user_role: 'donor',
-        });
-
-      if (profileError) throw profileError;
       
       toast.success("Registration successful! Please check your email to verify your account.");
       navigate('/login');
@@ -308,32 +223,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
-      // Register NGO with Supabase
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             organization_name: name,
-            role: 'ngo_admin',
+            user_role: 'ngo_admin',
+            ngo_type: ngoType,
           }
         }
       });
 
       if (error) throw error;
-
-      // Create NGO profile in database
-      const { error: ngoError } = await supabase
-        .from('ngos')
-        .insert({
-          id: data.user?.id,
-          name: name,
-          email: email,
-          ngo_type: ngoType,
-          verification_status: 'pending',
-        });
-
-      if (ngoError) throw ngoError;
       
       toast.success("Registration submitted! Your NGO profile is pending verification.");
       navigate('/login');
@@ -354,32 +256,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Invalid admin registration code");
       }
 
-      // Register Super Admin with Supabase
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: name,
-            role: 'super_admin',
+            user_role: 'super_admin',
             status: 'pending_approval', // Requires manual approval
           }
         }
       });
 
       if (error) throw error;
-
-      // Create admin profile in database
-      const { error: adminError } = await supabase
-        .from('admins')
-        .insert({
-          id: data.user?.id,
-          full_name: name,
-          email: email,
-          status: 'pending_approval',
-        });
-
-      if (adminError) throw adminError;
       
       toast.success("Super Admin registration submitted! Your account will be reviewed by existing administrators.");
       navigate('/login');
@@ -419,6 +308,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     user,
+    session,
     isLoading,
     isAuthenticated,
     signIn,

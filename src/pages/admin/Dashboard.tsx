@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,15 +26,9 @@ import {
   Users, 
   X 
 } from "lucide-react";
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-
-// Initialize Supabase client
-// Note: In production, these would be environment variables
-const supabaseUrl = 'https://your-supabase-url.supabase.co';
-const supabaseKey = 'your-supabase-anon-key';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -57,25 +52,28 @@ const AdminDashboard = () => {
         }
 
         // Fetch pending NGOs
-        const { data: ngos } = await supabase
+        const { data: ngos, error: ngoError } = await supabase
           .from('ngos')
           .select('*')
           .eq('verification_status', 'pending');
           
+        if (ngoError) throw ngoError;
         setPendingNGOs(ngos || []);
         
         // Fetch users
-        const { data: allUsers } = await supabase
+        const { data: allUsers, error: userError } = await supabase
           .from('profiles')
           .select('*');
           
+        if (userError) throw userError;
         setUsers(allUsers || []);
         
         // Fetch campaigns
-        const { data: allCampaigns } = await supabase
+        const { data: allCampaigns, error: campaignError } = await supabase
           .from('campaigns')
           .select('*');
           
+        if (campaignError) throw campaignError;
         setCampaigns(allCampaigns || []);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -110,6 +108,7 @@ const AdminDashboard = () => {
       
       toast.success(`NGO ${status === 'approved' ? 'approved' : 'rejected'} successfully`);
     } catch (error) {
+      console.error(`Failed to ${status} NGO:`, error);
       toast.error(`Failed to ${status === 'approved' ? 'approve' : 'reject'} NGO`);
     }
   };
@@ -138,6 +137,7 @@ const AdminDashboard = () => {
       
       toast.success(`Campaign ${status === 'approved' ? 'approved' : 'rejected'} successfully`);
     } catch (error) {
+      console.error(`Failed to ${status} campaign:`, error);
       toast.error(`Failed to ${status === 'approved' ? 'approve' : 'reject'} campaign`);
     }
   };
@@ -154,7 +154,10 @@ const AdminDashboard = () => {
   if (isLoading) {
     return (
       <div className="container py-12 flex justify-center">
-        <p>Loading...</p>
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }
