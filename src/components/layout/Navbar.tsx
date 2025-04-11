@@ -1,9 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
-import { Moon, Sun, Menu, X, LogOut, User, Settings } from "lucide-react";
+import { Moon, Sun, Menu, X, LogOut, User, Settings, Shield, Building } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -31,29 +31,74 @@ const Navbar = () => {
     try {
       await signOut();
       toast.success("You've been logged out successfully");
+      navigate('/');
     } catch (error) {
       toast.error("Failed to log out. Please try again.");
       console.error("Logout error:", error);
     }
   };
 
-  const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "NGOs", path: "/ngos" },
-    { name: "About", path: "/about" },
-    { name: "Contact", path: "/contact" },
-  ];
-
-  // Add dashboard link based on user role
-  if (isAuthenticated && user) {
-    if (user.role === 'super_admin') {
-      navLinks.push({ name: "Admin", path: "/admin/dashboard" });
-    } else if (user.role === 'ngo_admin') {
-      navLinks.push({ name: "Dashboard", path: "/ngo/dashboard" });
-    } else {
-      navLinks.push({ name: "Dashboard", path: "/dashboard" });
+  // Get role-specific navigation links
+  const getRoleBasedNavLinks = () => {
+    const commonLinks = [
+      { name: "Home", path: "/" },
+    ];
+    
+    if (!isAuthenticated) {
+      return [
+        ...commonLinks,
+        { name: "NGOs", path: "/ngos" },
+        { name: "About", path: "/about" },
+        { name: "Contact", path: "/contact" },
+      ];
     }
-  }
+    
+    // User is authenticated, show role-specific links
+    switch(user?.role) {
+      case 'super_admin':
+        return [
+          ...commonLinks,
+          { name: "Admin Dashboard", path: "/admin/dashboard" },
+          { name: "NGOs", path: "/ngos" },
+          { name: "Users", path: "/admin/dashboard?tab=users" },
+          { name: "Messages", path: "/admin/dashboard?tab=messages" },
+        ];
+      case 'ngo_admin':
+        return [
+          ...commonLinks,
+          { name: "NGO Dashboard", path: "/ngo/dashboard" },
+          { name: "Profile", path: "/ngo/profile" },
+          { name: "Donations", path: "/ngo/donations" },
+        ];
+      case 'donor':
+      default:
+        return [
+          ...commonLinks,
+          { name: "Dashboard", path: "/dashboard" },
+          { name: "NGOs", path: "/ngos" },
+          { name: "Donations", path: "/dashboard?tab=donations" },
+        ];
+    }
+  };
+
+  const navLinks = getRoleBasedNavLinks();
+
+  // Get the appropriate role display name and icon
+  const getRoleDisplay = () => {
+    if (!user) return { name: "Guest", icon: <User /> };
+    
+    switch(user.role) {
+      case 'super_admin':
+        return { name: "Admin", icon: <Shield className="h-4 w-4" /> };
+      case 'ngo_admin':
+        return { name: "NGO", icon: <Building className="h-4 w-4" /> };
+      case 'donor':
+      default:
+        return { name: "Donor", icon: <User className="h-4 w-4" /> };
+    }
+  };
+  
+  const roleDisplay = getRoleDisplay();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -103,17 +148,30 @@ const Navbar = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
+                    {roleDisplay.icon}
                     <span>{user?.name || user?.email || "Account"}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    {roleDisplay.name} Account
+                    {user?.role === 'ngo_admin' && user?.verification_status && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        user.verification_status === 'approved' 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {user.verification_status === 'approved' ? 'Verified' : 'Pending'}
+                      </span>
+                    )}
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  
+                  {/* Role-specific dropdown items */}
                   {user?.role === 'super_admin' && (
                     <DropdownMenuItem asChild>
                       <Link to="/admin/dashboard" className="flex w-full cursor-pointer items-center">
-                        <Settings className="mr-2 h-4 w-4" />
+                        <Shield className="mr-2 h-4 w-4" />
                         Admin Dashboard
                       </Link>
                     </DropdownMenuItem>
@@ -121,17 +179,27 @@ const Navbar = () => {
                   {user?.role === 'ngo_admin' && (
                     <DropdownMenuItem asChild>
                       <Link to="/ngo/dashboard" className="flex w-full cursor-pointer items-center">
-                        <Settings className="mr-2 h-4 w-4" />
+                        <Building className="mr-2 h-4 w-4" />
                         NGO Dashboard
                       </Link>
                     </DropdownMenuItem>
                   )}
+                  {user?.role === 'donor' && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard" className="flex w-full cursor-pointer items-center">
+                        <User className="mr-2 h-4 w-4" />
+                        My Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  
                   <DropdownMenuItem asChild>
                     <Link to="/profile" className="flex w-full cursor-pointer items-center">
-                      <User className="mr-2 h-4 w-4" />
+                      <Settings className="mr-2 h-4 w-4" />
                       Profile Settings
                     </Link>
                   </DropdownMenuItem>
+                  
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     className="flex cursor-pointer items-center text-destructive focus:text-destructive" 
@@ -188,12 +256,21 @@ const Navbar = () => {
             
             {isAuthenticated ? (
               <>
+                <div className="pt-2 pb-1 px-2">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    {roleDisplay.icon}
+                    <span>{roleDisplay.name} Account</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {user?.email}
+                  </div>
+                </div>
                 <Link 
                   to="/profile" 
                   className="flex items-center p-2 text-sm font-medium text-muted-foreground hover:text-primary"
                   onClick={() => setIsOpen(false)}
                 >
-                  <User className="mr-2 h-4 w-4" />
+                  <Settings className="mr-2 h-4 w-4" />
                   Profile Settings
                 </Link>
                 <Button 

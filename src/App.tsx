@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import Layout from "./components/layout/Layout";
 import Home from "./pages/Home";
@@ -48,6 +48,7 @@ const App = () => (
               <Route element={<ProtectedRoute requiredPermission="user_dashboard" />}>
                 <Route path="/" element={<Layout />}>
                   <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="profile" element={<Dashboard />} /> {/* Placeholder for profile page */}
                 </Route>
               </Route>
               
@@ -55,6 +56,7 @@ const App = () => (
               <Route element={<ProtectedRoute requiredPermission="admin_dashboard" />}>
                 <Route path="/" element={<Layout />}>
                   <Route path="admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="admin/profile" element={<Dashboard />} /> {/* Placeholder for admin profile page */}
                 </Route>
               </Route>
               
@@ -62,8 +64,13 @@ const App = () => (
               <Route element={<ProtectedRoute requiredPermission="ngo_dashboard" />}>
                 <Route path="/" element={<Layout />}>
                   <Route path="ngo/dashboard" element={<Dashboard />} />
+                  <Route path="ngo/profile" element={<Dashboard />} /> {/* Placeholder for NGO profile page */}
+                  <Route path="ngo/donations" element={<Dashboard />} /> {/* Placeholder for NGO donations page */}
                 </Route>
               </Route>
+              
+              {/* Role-based redirects */}
+              <Route path="/profile" element={<AuthenticatedRouteRedirect />} />
             </Routes>
           </TooltipProvider>
         </AuthProvider>
@@ -71,5 +78,23 @@ const App = () => (
     </ThemeProvider>
   </QueryClientProvider>
 );
+
+// This component will redirect users to the appropriate dashboard based on their role
+const AuthenticatedRouteRedirect = () => {
+  const { user, isAuthenticated } = useAuth();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  switch (user?.role) {
+    case 'super_admin':
+      return <Navigate to="/admin/dashboard" replace />;
+    case 'ngo_admin':
+      return <Navigate to="/ngo/dashboard" replace />;
+    default: // donor or any other role
+      return <Navigate to="/dashboard" replace />;
+  }
+};
 
 export default App;

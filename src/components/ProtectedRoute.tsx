@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredPermission,
   redirectTo = "/login",
 }) => {
-  const { isAuthenticated, isLoading, hasPermission } = useAuth();
+  const { isAuthenticated, isLoading, hasPermission, user } = useAuth();
+  const location = useLocation();
 
   // Show loading state
   if (isLoading) {
@@ -30,6 +31,25 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check if user has required permission
   if (requiredPermission && !hasPermission(requiredPermission)) {
+    // Determine where to redirect the user based on their role
+    let redirectPath = '/';
+    
+    if (isAuthenticated && user) {
+      switch(user.role) {
+        case 'super_admin':
+          redirectPath = '/admin/dashboard';
+          break;
+        case 'ngo_admin':
+          redirectPath = '/ngo/dashboard';
+          break;
+        case 'donor':
+          redirectPath = '/dashboard';
+          break;
+        default:
+          redirectPath = '/';
+      }
+    }
+    
     return (
       <div className="container flex min-h-[80vh] flex-col items-center justify-center py-12 text-center">
         <AlertCircle className="mb-4 h-12 w-12 text-destructive" />
@@ -39,7 +59,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         </p>
         <div className="flex gap-4">
           <Button asChild>
-            <a href={isAuthenticated ? "/dashboard" : "/login"}>
+            <a href={isAuthenticated ? redirectPath : "/login"}>
               {isAuthenticated ? "Go to Dashboard" : "Sign In"}
             </a>
           </Button>
@@ -53,7 +73,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check if user is authenticated
   if (!isAuthenticated) {
-    return <Navigate to={redirectTo} replace />;
+    return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
 
   // If all checks pass, render the protected content

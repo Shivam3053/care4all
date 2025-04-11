@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -31,6 +30,8 @@ interface AuthContextType {
   hasPermission: (permission: string) => boolean;
   isNGOVerified: (ngoId: string) => Promise<boolean>;
   getVerifiedNGOs: () => Promise<any[]>;
+  getUserRoleLabel: () => string;
+  getUserDashboardPath: () => string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,12 +44,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         
-        // Don't fetch profile data in the callback to prevent authentication deadlocks
         if (session?.user) {
           setIsAuthenticated(true);
           setTimeout(() => {
@@ -62,7 +61,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
@@ -90,7 +88,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Extract user information from metadata
       const role = metadata.user_role as UserRole || 'guest';
       
       const userObject: AuthUser = {
@@ -100,15 +97,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name: metadata.full_name || metadata.organization_name,
       };
       
-      // Add organization info for NGOs
       if (role === 'ngo_admin') {
         userObject.organization = metadata.organization_name;
-        userObject.verification_status = metadata.verification_status || 'pending'; // Default for new NGOs
+        userObject.verification_status = metadata.verification_status || 'pending';
       }
       
-      // Add verification status for admins
       if (role === 'super_admin') {
-        userObject.verification_status = metadata.verification_status || 'pending'; // Default for new admins
+        userObject.verification_status = metadata.verification_status || 'pending';
       }
       
       setUser(userObject);
@@ -131,7 +126,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      // Auth listener will handle setting the user state
       toast.success("Successfully signed in!");
     } catch (error: any) {
       toast.error(error.message || "Login failed");
@@ -231,7 +225,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
-      // For development purposes, make the code a simple one
       if (secretCode !== "admin123") {
         throw new Error("Invalid admin registration code");
       }
@@ -243,7 +236,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: {
             full_name: name,
             user_role: 'super_admin',
-            verification_status: 'pending', // Requires manual approval
+            verification_status: 'pending',
           }
         }
       });
@@ -260,11 +253,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Permission checking function for RBAC
   const hasPermission = (permission: string): boolean => {
     if (!user) return false;
     
-    // Define permission mappings based on roles
     const rolePermissions: Record<UserRole, string[]> = {
       super_admin: [
         'approve_ngo', 'reject_ngo', 'manage_donations', 
@@ -282,20 +273,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       guest: ['view_ngos', 'register', 'login']
     };
     
-    // Check if the user's role has the requested permission
     return rolePermissions[user.role]?.includes(permission) || false;
   };
 
-  // Check if an NGO is verified
   const isNGOVerified = async (ngoId: string): Promise<boolean> => {
     try {
-      // In a real app, this would query Supabase to check the NGO's verification status
-      // For now, we'll use mock data
-      // Simulate a database call with a mock delay
       return new Promise(resolve => {
         setTimeout(() => {
-          // Mock verification - in real app this would check Supabase
-          const isVerified = Math.random() > 0.3; // 70% chance of being verified
+          const isVerified = Math.random() > 0.3;
           resolve(isVerified);
         }, 300);
       });
@@ -305,14 +290,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Get all verified NGOs
   const getVerifiedNGOs = async (): Promise<any[]> => {
     try {
-      // In a real app, this would query Supabase to get verified NGOs
-      // For now, we'll use mock data
       return new Promise(resolve => {
         setTimeout(() => {
-          // Mock data - in real app this would fetch from Supabase
           const mockNGOs = [
             {
               id: "1",
@@ -340,6 +321,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const getUserRoleLabel = (): string => {
+    if (!user) return 'Guest';
+
+    switch(user.role) {
+      case 'super_admin':
+        return 'Admin';
+      case 'ngo_admin':
+        return 'NGO';
+      case 'donor':
+        return 'Donor';
+      default:
+        return 'User';
+    }
+  };
+
+  const getUserDashboardPath = (): string => {
+    if (!user) return '/';
+
+    switch(user.role) {
+      case 'super_admin':
+        return '/admin/dashboard';
+      case 'ngo_admin':
+        return '/ngo/dashboard';
+      case 'donor':
+        return '/dashboard';
+      default:
+        return '/';
+    }
+  };
+
   const value = {
     user,
     session,
@@ -353,7 +364,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     registerSuperAdmin,
     hasPermission,
     isNGOVerified,
-    getVerifiedNGOs
+    getVerifiedNGOs,
+    getUserRoleLabel,
+    getUserDashboardPath
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
