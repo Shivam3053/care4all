@@ -44,8 +44,8 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Route>
               
-              {/* Protected routes for regular users */}
-              <Route element={<ProtectedRoute requiredPermission="view_dashboard" />}>
+              {/* Protected routes for regular users (donors) */}
+              <Route element={<ProtectedRoute requiredPermission="user_dashboard" />}>
                 <Route path="/" element={<Layout />}>
                   <Route path="dashboard" element={<Dashboard />} />
                 </Route>

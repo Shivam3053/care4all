@@ -29,6 +29,8 @@ interface AuthContextType {
   registerNGO: (email: string, password: string, name: string, ngoType: string) => Promise<void>;
   registerSuperAdmin: (email: string, password: string, name: string, secretCode: string) => Promise<void>;
   hasPermission: (permission: string) => boolean;
+  isNGOVerified: (ngoId: string) => Promise<boolean>;
+  getVerifiedNGOs: () => Promise<any[]>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -101,12 +103,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Add organization info for NGOs
       if (role === 'ngo_admin') {
         userObject.organization = metadata.organization_name;
-        userObject.verification_status = 'pending'; // Default for new NGOs
+        userObject.verification_status = metadata.verification_status || 'pending'; // Default for new NGOs
       }
       
       // Add verification status for admins
       if (role === 'super_admin') {
-        userObject.verification_status = 'pending'; // Default for new admins
+        userObject.verification_status = metadata.verification_status || 'pending'; // Default for new admins
       }
       
       setUser(userObject);
@@ -187,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       toast.success("Registration successful! Please check your email to verify your account.");
-      navigate('/login');
+      navigate('/login?role=donor');
     } catch (error: any) {
       toast.error(error.message || "Registration failed");
       throw error;
@@ -208,6 +210,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             organization_name: name,
             user_role: 'ngo_admin',
             ngo_type: ngoType,
+            verification_status: 'pending'
           }
         }
       });
@@ -215,7 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       toast.success("Registration submitted! Your NGO profile is pending verification.");
-      navigate('/login');
+      navigate('/login?role=ngo');
     } catch (error: any) {
       toast.error(error.message || "Registration failed");
       throw error;
@@ -240,7 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: {
             full_name: name,
             user_role: 'super_admin',
-            status: 'pending', // Requires manual approval
+            verification_status: 'pending', // Requires manual approval
           }
         }
       });
@@ -248,7 +251,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       toast.success("Super Admin registration submitted! Your account will be reviewed by existing administrators.");
-      navigate('/login');
+      navigate('/login?role=admin');
     } catch (error: any) {
       toast.error(error.message || "Registration failed");
       throw error;
@@ -283,6 +286,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return rolePermissions[user.role]?.includes(permission) || false;
   };
 
+  // Check if an NGO is verified
+  const isNGOVerified = async (ngoId: string): Promise<boolean> => {
+    try {
+      // In a real app, this would query Supabase to check the NGO's verification status
+      // For now, we'll use mock data
+      // Simulate a database call with a mock delay
+      return new Promise(resolve => {
+        setTimeout(() => {
+          // Mock verification - in real app this would check Supabase
+          const isVerified = Math.random() > 0.3; // 70% chance of being verified
+          resolve(isVerified);
+        }, 300);
+      });
+    } catch (error) {
+      console.error("Error checking NGO verification:", error);
+      return false;
+    }
+  };
+
+  // Get all verified NGOs
+  const getVerifiedNGOs = async (): Promise<any[]> => {
+    try {
+      // In a real app, this would query Supabase to get verified NGOs
+      // For now, we'll use mock data
+      return new Promise(resolve => {
+        setTimeout(() => {
+          // Mock data - in real app this would fetch from Supabase
+          const mockNGOs = [
+            {
+              id: "1",
+              name: "Children First Foundation",
+              type: "children",
+              description: "Supporting underprivileged children with education and healthcare",
+              location: "Mumbai, Maharashtra",
+              is_verified: true
+            },
+            {
+              id: "2",
+              name: "EcoLife Initiative",
+              type: "environment",
+              description: "Working towards a sustainable future through conservation efforts",
+              location: "Bengaluru, Karnataka",
+              is_verified: true
+            }
+          ];
+          resolve(mockNGOs);
+        }, 500);
+      });
+    } catch (error) {
+      console.error("Error fetching verified NGOs:", error);
+      return [];
+    }
+  };
+
   const value = {
     user,
     session,
@@ -294,7 +351,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     registerDonor,
     registerNGO,
     registerSuperAdmin,
-    hasPermission
+    hasPermission,
+    isNGOVerified,
+    getVerifiedNGOs
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,9 +1,12 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Table, 
   TableBody, 
@@ -23,11 +26,15 @@ import {
   Search, 
   Shield, 
   Users, 
-  X 
+  X,
+  Plus,
+  Mail,
+  MessageSquare
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
+// Mock data - in a real app this would come from Supabase
 const mockNGOs = [
   {
     id: "1",
@@ -95,6 +102,33 @@ const mockCampaigns = [
   }
 ];
 
+const mockMessages = [
+  {
+    id: "1",
+    name: "Rahul Sharma",
+    email: "rahul@example.com",
+    message: "I'm interested in volunteering with your organization. Could you please provide more information?",
+    created_at: "2023-08-15T14:30:00Z",
+    status: "unread"
+  },
+  {
+    id: "2",
+    name: "Priya Singh",
+    email: "priya@example.com",
+    message: "I'm having trouble making a donation through the website. The payment isn't going through.",
+    created_at: "2023-08-14T09:15:00Z",
+    status: "read"
+  },
+  {
+    id: "3",
+    name: "Amit Patel",
+    email: "amit@example.com",
+    message: "I'd like to organize a fundraising event for your platform. How can we collaborate?",
+    created_at: "2023-08-10T16:45:00Z",
+    status: "resolved"
+  }
+];
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, hasPermission } = useAuth();
@@ -102,8 +136,18 @@ const AdminDashboard = () => {
   const [pendingNGOs, setPendingNGOs] = useState(mockNGOs);
   const [users, setUsers] = useState(mockUsers);
   const [campaigns, setCampaigns] = useState(mockCampaigns);
+  const [messages, setMessages] = useState(mockMessages);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  
+  // Add NGO form state
+  const [showAddNGOForm, setShowAddNGOForm] = useState(false);
+  const [newNGO, setNewNGO] = useState({
+    name: "",
+    email: "",
+    type: "education",
+    description: ""
+  });
   
   useEffect(() => {
     if (!hasPermission('admin_dashboard')) {
@@ -125,6 +169,8 @@ const AdminDashboard = () => {
         return;
       }
 
+      // In a real app, we would update the NGO's status in Supabase
+      // For now, we'll just remove it from the pending list to simulate approval
       setPendingNGOs(prevNGOs => 
         prevNGOs.filter(ngo => ngo.id !== ngoId)
       );
@@ -143,6 +189,7 @@ const AdminDashboard = () => {
         return;
       }
 
+      // In a real app, we would update the campaign status in Supabase
       setCampaigns(prevCampaigns => 
         prevCampaigns.map(campaign => 
           campaign.id === campaignId ? { ...campaign, status } : campaign
@@ -153,6 +200,60 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error(`Failed to ${status} campaign:`, error);
       toast.error(`Failed to ${status === 'approved' ? 'approve' : 'reject'} campaign`);
+    }
+  };
+  
+  const handleMessageStatusChange = (messageId, status) => {
+    try {
+      // In a real app, we would update the message status in Supabase
+      setMessages(prevMessages => 
+        prevMessages.map(message => 
+          message.id === messageId ? { ...message, status } : message
+        )
+      );
+      
+      toast.success(`Message marked as ${status}`);
+    } catch (error) {
+      console.error(`Failed to update message status:`, error);
+      toast.error("Failed to update message status");
+    }
+  };
+  
+  const handleAddNGO = (e) => {
+    e.preventDefault();
+    
+    if (!newNGO.name || !newNGO.email || !newNGO.type) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    
+    try {
+      // In a real app, we would add the NGO to Supabase
+      const newNGOWithId = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: newNGO.name,
+        ngo_type: newNGO.type,
+        email: newNGO.email,
+        created_at: new Date().toISOString(),
+        verification_status: "approved" // Auto-approve when added by admin
+      };
+      
+      // Add to NGOs list (not pending since it's pre-approved)
+      setPendingNGOs(prevNGOs => [...prevNGOs, newNGOWithId]);
+      
+      // Reset form
+      setNewNGO({
+        name: "",
+        email: "",
+        type: "education",
+        description: ""
+      });
+      setShowAddNGOForm(false);
+      
+      toast.success("NGO added successfully");
+    } catch (error) {
+      console.error("Failed to add NGO:", error);
+      toast.error("Failed to add NGO");
     }
   };
   
@@ -184,7 +285,7 @@ const AdminDashboard = () => {
         </Button>
       </div>
 
-      <div className="mb-8 grid gap-4 md:grid-cols-4">
+      <div className="mb-8 grid gap-4 md:grid-cols-5">
         <Card>
           <CardContent className="flex items-center justify-between p-6">
             <div>
@@ -223,9 +324,24 @@ const AdminDashboard = () => {
         <Card>
           <CardContent className="flex items-center justify-between p-6">
             <div>
+              <p className="text-sm text-muted-foreground">Unread Messages</p>
+              <p className="text-3xl font-bold">
+                {messages.filter(m => m.status === 'unread').length}
+              </p>
+            </div>
+            <div className="rounded-full bg-primary/10 p-3 text-primary">
+              <MessageSquare className="h-6 w-6" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center justify-between p-6">
+            <div>
               <p className="text-sm text-muted-foreground">Admin Tasks</p>
               <p className="text-3xl font-bold">
-                {pendingNGOs.length + campaigns.filter(c => c.status === 'pending').length}
+                {pendingNGOs.length + 
+                campaigns.filter(c => c.status === 'pending').length +
+                messages.filter(m => m.status === 'unread').length}
               </p>
             </div>
             <div className="rounded-full bg-primary/10 p-3 text-primary">
@@ -236,10 +352,11 @@ const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="ngo-approvals" className="space-y-6">
-        <TabsList className="mb-8 grid w-full grid-cols-4 lg:w-[600px]">
+        <TabsList className="mb-8 grid w-full grid-cols-5 lg:w-[750px]">
           <TabsTrigger value="ngo-approvals">NGO Approvals</TabsTrigger>
+          <TabsTrigger value="add-ngo">Add NGO</TabsTrigger>
           <TabsTrigger value="users">User Management</TabsTrigger>
-          <TabsTrigger value="campaigns">Fundraising</TabsTrigger>
+          <TabsTrigger value="messages">Messages</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
         
@@ -303,6 +420,100 @@ const AdminDashboard = () => {
                   </TableBody>
                 </Table>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="add-ngo" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Manually Add NGO</CardTitle>
+              <CardDescription>
+                Add a new NGO directly to the platform with verified status
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAddNGO} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="ngoName">Organization Name *</Label>
+                    <Input
+                      id="ngoName"
+                      placeholder="NGO name"
+                      value={newNGO.name}
+                      onChange={(e) => setNewNGO({...newNGO, name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="ngoEmail">Email Address *</Label>
+                    <Input
+                      id="ngoEmail"
+                      type="email"
+                      placeholder="contact@ngo.org"
+                      value={newNGO.email}
+                      onChange={(e) => setNewNGO({...newNGO, email: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="ngoType">Category *</Label>
+                    <select
+                      id="ngoType"
+                      className="w-full px-3 py-2 border rounded-md"
+                      value={newNGO.type}
+                      onChange={(e) => setNewNGO({...newNGO, type: e.target.value})}
+                      required
+                    >
+                      <option value="education">Education</option>
+                      <option value="healthcare">Healthcare</option>
+                      <option value="environment">Environment</option>
+                      <option value="children">Children & Youth</option>
+                      <option value="women">Women Empowerment</option>
+                      <option value="elderly">Elderly Care</option>
+                      <option value="disabilities">Disabilities & Inclusion</option>
+                      <option value="animals">Animal Welfare</option>
+                      <option value="disaster">Disaster Relief</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="ngoPassword">Create Password *</Label>
+                    <Input
+                      id="ngoPassword"
+                      type="password"
+                      placeholder="Create a secure password"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      This will be used by the NGO to log in to their account
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="ngoDescription">Description</Label>
+                  <Textarea
+                    id="ngoDescription"
+                    placeholder="Describe the NGO's mission and activities"
+                    rows={4}
+                    value={newNGO.description}
+                    onChange={(e) => setNewNGO({...newNGO, description: e.target.value})}
+                  />
+                </div>
+                
+                <div className="flex justify-end space-x-2">
+                  <Button type="submit" className="px-4">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add NGO
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
         </TabsContent>
@@ -389,122 +600,98 @@ const AdminDashboard = () => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="campaigns" className="space-y-6">
+        <TabsContent value="messages" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Fundraising Campaigns</CardTitle>
+              <CardTitle>Messages & Contact Form Submissions</CardTitle>
               <CardDescription>
-                Review and manage fundraising campaigns created by NGOs
+                View and respond to messages from the Contact Us page
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {campaigns.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">No campaigns to review at this time</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
-                      <Button 
-                        variant={activeFilter === "all" ? "default" : "outline"} 
-                        size="sm"
-                        onClick={() => setActiveFilter("all")}
-                      >
-                        All
-                      </Button>
-                      <Button 
-                        variant={activeFilter === "pending" ? "default" : "outline"} 
-                        size="sm"
-                        onClick={() => setActiveFilter("pending")}
-                      >
-                        Pending
-                      </Button>
-                      <Button 
-                        variant={activeFilter === "approved" ? "default" : "outline"} 
-                        size="sm"
-                        onClick={() => setActiveFilter("approved")}
-                      >
-                        Approved
-                      </Button>
-                    </div>
-                    <div className="relative w-64">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search campaigns..."
-                        className="pl-10"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search messages..."
+                      className="pl-10"
+                    />
                   </div>
-                  
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Campaign</TableHead>
-                        <TableHead>NGO</TableHead>
-                        <TableHead>Goal</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {campaigns
-                        .filter(campaign => {
-                          if (activeFilter !== "all" && campaign.status !== activeFilter) {
-                            return false;
-                          }
-                          return campaign.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                 campaign.ngo_name?.toLowerCase().includes(searchTerm.toLowerCase());
-                        })
-                        .map((campaign) => (
-                          <TableRow key={campaign.id}>
-                            <TableCell className="font-medium">{campaign.title}</TableCell>
-                            <TableCell>{campaign.ngo_name}</TableCell>
-                            <TableCell>₹{campaign.goal_amount}</TableCell>
-                            <TableCell>
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                campaign.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                campaign.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              {campaign.status === 'pending' && (
-                                <div className="flex space-x-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="h-8 text-green-600 border-green-600"
-                                    onClick={() => handleCampaignApproval(campaign.id, 'approved')}
-                                  >
-                                    <Check className="h-4 w-4 mr-1" /> Approve
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="h-8 text-destructive border-destructive"
-                                    onClick={() => handleCampaignApproval(campaign.id, 'rejected')}
-                                  >
-                                    <X className="h-4 w-4 mr-1" /> Reject
-                                  </Button>
-                                </div>
-                              )}
-                              {campaign.status !== 'pending' && (
-                                <Button variant="outline" size="sm">
-                                  View Details
-                                </Button>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                    </TableBody>
-                  </Table>
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" className="space-x-1">
+                      <Filter className="h-4 w-4" />
+                      <span>Filter</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                    <select
+                      className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="all">All Messages</option>
+                      <option value="unread">Unread</option>
+                      <option value="read">Read</option>
+                      <option value="resolved">Resolved</option>
+                    </select>
+                  </div>
                 </div>
-              )}
+              
+                {messages.map((message) => (
+                  <Card key={message.id} className={`mt-4 ${message.status === 'unread' ? 'border-primary' : ''}`}>
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="font-semibold flex items-center">
+                            {message.name}
+                            {message.status === 'unread' && (
+                              <Badge className="ml-2 bg-primary">New</Badge>
+                            )}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">{message.email}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(message.created_at).toLocaleDateString()}
+                          </p>
+                          <p className="text-sm">
+                            {message.status === 'read' ? 'Read' : 
+                             message.status === 'resolved' ? 'Resolved' : 'Unread'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="border-l-4 pl-3 py-1 my-2 border-muted">
+                        <p className="text-sm">{message.message}</p>
+                      </div>
+                      <div className="flex justify-end space-x-2 mt-3">
+                        {message.status === 'unread' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleMessageStatusChange(message.id, 'read')}
+                          >
+                            Mark as Read
+                          </Button>
+                        )}
+                        {message.status !== 'resolved' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleMessageStatusChange(message.id, 'resolved')}
+                          >
+                            Mark as Resolved
+                          </Button>
+                        )}
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                        >
+                          <Mail className="h-4 w-4 mr-1" />
+                          Reply
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

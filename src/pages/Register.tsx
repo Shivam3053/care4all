@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,8 +36,17 @@ import NGORegistrationForm from "@/components/NGORegistrationForm";
 const Register = () => {
   const { registerDonor, registerSuperAdmin, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [userType, setUserType] = useState("donor");
+  const [searchParams] = useSearchParams();
+  const [userType, setUserType] = useState(searchParams.get("tab") || "donor");
   const [showSuperAdminInfo, setShowSuperAdminInfo] = useState(false);
+  
+  // Set initial tab based on URL parameter
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam && ["donor", "ngo", "admin"].includes(tabParam)) {
+      setUserType(tabParam);
+    }
+  }, [searchParams]);
   
   // Donor form state
   const [donorEmail, setDonorEmail] = useState("");
@@ -100,18 +109,27 @@ const Register = () => {
 
   return (
     <div className="container my-12">
-      <Tabs defaultValue="donor" onValueChange={setUserType} className="space-y-6">
+      <Tabs defaultValue={userType} onValueChange={setUserType} className="space-y-6">
         <TabsList className="grid w-full max-w-md mx-auto grid-cols-3">
-          <TabsTrigger value="donor">Donor</TabsTrigger>
-          <TabsTrigger value="ngo">NGO</TabsTrigger>
-          <TabsTrigger value="admin">Admin</TabsTrigger>
+          <TabsTrigger value="donor" className="flex items-center space-x-1">
+            <User className="h-4 w-4" />
+            <span>Donor</span>
+          </TabsTrigger>
+          <TabsTrigger value="ngo" className="flex items-center space-x-1">
+            <Building className="h-4 w-4" />
+            <span>NGO</span>
+          </TabsTrigger>
+          <TabsTrigger value="admin" className="flex items-center space-x-1">
+            <Shield className="h-4 w-4" />
+            <span>Admin</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="donor">
           <div className="max-w-md mx-auto">
             <Card className="border-2">
               <CardHeader className="space-y-1 text-center">
-                <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
+                <CardTitle className="text-2xl font-bold">Create a Donor Account</CardTitle>
                 <CardDescription>
                   Join Care4All to start supporting organizations
                 </CardDescription>
@@ -194,14 +212,21 @@ const Register = () => {
                   </div>
                   
                   <Button type="submit" disabled={isLoading} className="w-full">
-                    {isLoading ? "Creating account..." : "Create account"}
+                    {isLoading ? (
+                      <>
+                        <span className="animate-spin mr-2">⟳</span>
+                        Creating account...
+                      </>
+                    ) : (
+                      "Create account"
+                    )}
                   </Button>
                 </form>
               </CardContent>
               <CardFooter className="flex flex-col space-y-4">
                 <div className="text-sm text-center">
                   Already have an account?{" "}
-                  <Link to="/login" className="text-primary hover:underline">
+                  <Link to="/login?role=donor" className="text-primary hover:underline">
                     Sign in
                   </Link>
                 </div>
@@ -366,7 +391,14 @@ const Register = () => {
                   </div>
                   
                   <Button type="submit" disabled={isLoading} className="w-full">
-                    {isLoading ? "Submitting..." : "Request Admin Access"}
+                    {isLoading ? (
+                      <>
+                        <span className="animate-spin mr-2">⟳</span>
+                        Submitting...
+                      </>
+                    ) : (
+                      "Request Admin Access"
+                    )}
                   </Button>
                   
                   <p className="text-sm text-muted-foreground text-center">
@@ -377,7 +409,7 @@ const Register = () => {
               <CardFooter>
                 <div className="text-sm text-center w-full">
                   Already have an account?{" "}
-                  <Link to="/login" className="text-primary hover:underline">
+                  <Link to="/login?role=admin" className="text-primary hover:underline">
                     Sign in
                   </Link>
                 </div>
