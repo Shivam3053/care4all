@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,11 +13,13 @@ import {
   Phone, 
   Mail, 
   CheckCircle2,
-  X
+  X,
+  Loader2
 } from "lucide-react";
 import WhatsappIcon from "./icons/WhatsappIcon";
 import { type NGO } from "@/data/mockData";
 import { Link } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ExtensionDemoProps {
   ngo?: NGO;
@@ -31,8 +33,16 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
   onClose 
 }) => {
   const [copied, setCopied] = useState<string | null>(null);
+  const [qrLoaded, setQrLoaded] = useState(false);
+  const [logoLoaded, setLogoLoaded] = useState(false);
 
-  // Use passed NGO data or fallback to mock data
+  // Reset loading states when a new NGO is loaded
+  useEffect(() => {
+    setQrLoaded(false);
+    setLogoLoaded(false);
+  }, [ngo]);
+
+  // If no NGO data is provided, use a fallback
   const ngoData = ngo || {
     id: "mock",
     name: "Children First Foundation",
@@ -41,11 +51,26 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
     phone: "+91-9876543210",
     email: "donate@childrenfirst.org",
     website: "https://childrenfirst.org",
-    coverImage: "https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg",
-    verified: true
+    coverImage: "https://source.unsplash.com/random/800x600/?charity",
+    verified: true,
+    category: "Children",
+    location: "Mumbai, India",
+    images: [],
+    foundedYear: 2010,
+    totalRaised: 5000000,
+    supporters: 2500,
+    trustScore: 92,
+    regNumber: "NGO12345",
+    achievements: [],
+    team: []
   };
 
   const handleCopy = (text: string, type: string) => {
+    if (!text) {
+      toast.error(`No ${type} available to copy`);
+      return;
+    }
+    
     navigator.clipboard.writeText(text);
     setCopied(type);
     
@@ -94,11 +119,21 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
         
         <CardHeader className="border-b border-gray-700 pb-3 pt-4">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-md overflow-hidden">
+            <div className="h-12 w-12 rounded-md overflow-hidden bg-gray-800 relative">
+              {!logoLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="h-6 w-6 text-gray-400 animate-spin" />
+                </div>
+              )}
               <img 
                 src={ngoData.logo} 
                 alt={`${ngoData.name} logo`} 
-                className="h-full w-full object-cover" 
+                className={`h-full w-full object-cover ${logoLoaded ? 'opacity-100' : 'opacity-0'}`}
+                onLoad={() => setLogoLoaded(true)}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "https://placehold.co/100x100/252525/64748b?text=Logo";
+                  setLogoLoaded(true);
+                }}
               />
             </div>
             <div>
@@ -121,12 +156,19 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
               QR Code for UPI Donation
             </h3>
             <div className="flex justify-center">
-              <div className="border border-gray-700 p-2 rounded-md bg-white">
+              <div className="border border-gray-700 p-2 rounded-md bg-white relative" style={{ minHeight: "134px" }}>
+                {!qrLoaded && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                    <Loader2 className="h-10 w-10 text-gray-400 animate-spin" />
+                  </div>
+                )}
                 {/* Generate QR code based on UPI ID */}
                 <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=${ngoData.upiId}`} 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=${ngoData.upiId || 'example@upi'}`} 
                   alt="UPI QR Code" 
-                  className="w-[130px] h-[130px]" 
+                  className={`w-[130px] h-[130px] ${qrLoaded ? 'opacity-100' : 'opacity-0'}`} 
+                  onLoad={() => setQrLoaded(true)}
+                  onError={() => setQrLoaded(true)}
                 />
               </div>
             </div>
@@ -136,7 +178,7 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
             <h3 className="text-sm font-medium text-gray-300">UPI ID</h3>
             <div className="flex">
               <Input 
-                value={ngoData.upiId} 
+                value={ngoData.upiId || 'Not available'} 
                 readOnly 
                 className="rounded-r-none bg-gray-800 border-gray-700 text-white"
               />
@@ -145,6 +187,7 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
                 size="sm"
                 className="rounded-l-none bg-gray-700 hover:bg-gray-600"
                 onClick={() => handleCopy(ngoData.upiId || "", "UPI ID")}
+                disabled={!ngoData.upiId}
               >
                 {copied === "UPI ID" ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               </Button>
@@ -154,7 +197,7 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-gray-300">Contact Info</h3>
             <div className="space-y-2">
-              {ngoData.phone && (
+              {ngoData.phone ? (
                 <div className="flex items-center">
                   <div className="flex gap-2 items-center flex-1">
                     <Phone className="h-4 w-4 text-gray-400" />
@@ -183,9 +226,16 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
                     </Button>
                   </div>
                 </div>
+              ) : (
+                <div className="flex items-center">
+                  <div className="flex gap-2 items-center flex-1">
+                    <Phone className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-400">Phone not available</span>
+                  </div>
+                </div>
               )}
               
-              {ngoData.email && (
+              {ngoData.email ? (
                 <div className="flex items-center">
                   <div className="flex gap-2 items-center flex-1">
                     <Mail className="h-4 w-4 text-gray-400" />
@@ -204,7 +254,21 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
                     )}
                   </Button>
                 </div>
+              ) : (
+                <div className="flex items-center">
+                  <div className="flex gap-2 items-center flex-1">
+                    <Mail className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-400">Email not available</span>
+                  </div>
+                </div>
               )}
+              
+              <div className="flex items-center">
+                <div className="flex gap-2 items-center flex-1">
+                  <MapPin className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm text-gray-200">{ngoData.location || 'Location not available'}</span>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -247,5 +311,8 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
     </div>
   );
 };
+
+// Import MapPin icon since it's used in the component
+import { MapPin } from "lucide-react";
 
 export default ExtensionDemo;
