@@ -1,21 +1,25 @@
 export interface NGO {
   id: string;
   name: string;
-  regNumber: string;
-  category: string;
-  location: string;
   description: string;
-  verified: boolean;
-  trustScore: number;
   logo: string;
   coverImage: string;
+  category: string;
+  location: string;
   foundedYear: number;
   totalRaised: number;
   supporters: number;
+  verified: boolean;
+  featured?: boolean;
+  trustScore: number;
+  regNumber: string;
   upiId: string;
-  achievements: Achievement[];
+  phone: string;
+  email: string;
+  website?: string;
   team: TeamMember[];
-  gallery: string[];
+  achievements: Achievement[];
+  images: string[];
 }
 
 export interface Achievement {
@@ -63,19 +67,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo1",
     name: "EduReach Foundation",
-    regNumber: "NGO123456",
-    category: "Education",
-    location: "Mumbai",
     description:
       "EduReach Foundation is dedicated to providing quality education to underprivileged children across India. We focus on building schools in rural areas, training teachers, and providing educational materials to students who cannot afford them.",
-    verified: true,
-    trustScore: 94,
     logo: "https://placehold.co/200x200/00afaf/ffffff?text=ER",
     coverImage: "https://placehold.co/1200x400/00afaf/ffffff?text=EduReach+Foundation",
     foundedYear: 2010,
     totalRaised: 15000000,
     supporters: 25000,
+    verified: true,
+    trustScore: 94,
+    regNumber: "NGO123456",
     upiId: "edureachfoundation@upi",
+    phone: "1234567890",
+    email: "edureachfoundation@example.com",
+    website: "www.edureachfoundation.com",
+    team: [
+      {
+        id: "erteam1",
+        name: "Rajiv Sharma",
+        role: "Founder & CEO",
+        image: "https://placehold.co/300x300/00afaf/ffffff?text=RS",
+      },
+      {
+        id: "erteam2",
+        name: "Anita Patel",
+        role: "Education Director",
+        image: "https://placehold.co/300x300/00afaf/ffffff?text=AP",
+      },
+    ],
     achievements: [
       {
         id: "erach1",
@@ -94,21 +113,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/00afaf/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "erteam1",
-        name: "Rajiv Sharma",
-        role: "Founder & CEO",
-        image: "https://placehold.co/300x300/00afaf/ffffff?text=RS",
-      },
-      {
-        id: "erteam2",
-        name: "Anita Patel",
-        role: "Education Director",
-        image: "https://placehold.co/300x300/00afaf/ffffff?text=AP",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+3",
@@ -117,19 +122,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo2",
     name: "GreenEarth Initiative",
-    regNumber: "NGO789012",
-    category: "Environment",
-    location: "Bangalore",
     description:
       "GreenEarth Initiative works towards environmental conservation through tree plantation drives, waste management programs, and raising awareness about climate change. We believe in creating a sustainable future for all living beings.",
-    verified: true,
-    trustScore: 88,
     logo: "https://placehold.co/200x200/008c8c/ffffff?text=GE",
     coverImage: "https://placehold.co/1200x400/008c8c/ffffff?text=GreenEarth+Initiative",
     foundedYear: 2015,
     totalRaised: 8500000,
     supporters: 12000,
+    verified: true,
+    trustScore: 88,
+    regNumber: "NGO789012",
     upiId: "greenearthinitiative@upi",
+    phone: "9876543210",
+    email: "greenearthinitiative@example.com",
+    website: "www.greenearthinitiative.com",
+    team: [
+      {
+        id: "geteam1",
+        name: "Meera Krishnan",
+        role: "Founder & Environmental Scientist",
+        image: "https://placehold.co/300x300/008c8c/ffffff?text=MK",
+      },
+      {
+        id: "geteam2",
+        name: "Arjun Reddy",
+        role: "Operations Head",
+        image: "https://placehold.co/300x300/008c8c/ffffff?text=AR",
+      },
+    ],
     achievements: [
       {
         id: "geach1",
@@ -148,21 +168,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/008c8c/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "geteam1",
-        name: "Meera Krishnan",
-        role: "Founder & Environmental Scientist",
-        image: "https://placehold.co/300x300/008c8c/ffffff?text=MK",
-      },
-      {
-        id: "geteam2",
-        name: "Arjun Reddy",
-        role: "Operations Head",
-        image: "https://placehold.co/300x300/008c8c/ffffff?text=AR",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+3",
@@ -171,19 +177,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo3",
     name: "HealthCare For All",
-    regNumber: "NGO345678",
-    category: "Healthcare",
-    location: "Delhi",
     description:
       "HealthCare For All is committed to providing medical assistance to those who cannot afford quality healthcare. We run mobile clinics, health camps, and awareness programs in rural and urban slum areas.",
-    verified: true,
-    trustScore: 91,
     logo: "https://placehold.co/200x200/006969/ffffff?text=HC",
     coverImage: "https://placehold.co/1200x400/006969/ffffff?text=HealthCare+For+All",
     foundedYear: 2008,
     totalRaised: 20000000,
     supporters: 18000,
+    verified: true,
+    trustScore: 91,
+    regNumber: "NGO345678",
     upiId: "healthcareforall@upi",
+    phone: "5555555555",
+    email: "healthcareforall@example.com",
+    website: "www.healthcareforall.com",
+    team: [
+      {
+        id: "hcteam1",
+        name: "Dr. Sunil Verma",
+        role: "Founder & Medical Director",
+        image: "https://placehold.co/300x300/006969/ffffff?text=SV",
+      },
+      {
+        id: "hcteam2",
+        name: "Dr. Priya Singh",
+        role: "Chief Medical Officer",
+        image: "https://placehold.co/300x300/006969/ffffff?text=PS",
+      },
+    ],
     achievements: [
       {
         id: "hcach1",
@@ -202,21 +223,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/006969/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "hcteam1",
-        name: "Dr. Sunil Verma",
-        role: "Founder & Medical Director",
-        image: "https://placehold.co/300x300/006969/ffffff?text=SV",
-      },
-      {
-        id: "hcteam2",
-        name: "Dr. Priya Singh",
-        role: "Chief Medical Officer",
-        image: "https://placehold.co/300x300/006969/ffffff?text=PS",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+3",
@@ -225,19 +232,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo4",
     name: "Animal Rescue Network",
-    regNumber: "NGO901234",
-    category: "Animal Welfare",
-    location: "Jaipur",
     description:
       "Animal Rescue Network is dedicated to rescuing, rehabilitating, and rehoming abandoned and injured animals. We also work towards creating awareness about animal rights and welfare.",
-    verified: true,
-    trustScore: 86,
     logo: "https://placehold.co/200x200/004646/ffffff?text=AR",
     coverImage: "https://placehold.co/1200x400/004646/ffffff?text=Animal+Rescue+Network",
     foundedYear: 2012,
     totalRaised: 6000000,
     supporters: 8500,
+    verified: true,
+    trustScore: 86,
+    regNumber: "NGO901234",
     upiId: "animalrescuenetwork@upi",
+    phone: "1111111111",
+    email: "animalrescuenetwork@example.com",
+    website: "www.animalrescuenetwork.com",
+    team: [
+      {
+        id: "arteam1",
+        name: "Vikram Choudhary",
+        role: "Founder & Director",
+        image: "https://placehold.co/300x300/004646/ffffff?text=VC",
+      },
+      {
+        id: "arteam2",
+        name: "Dr. Ritu Chauhan",
+        role: "Chief Veterinarian",
+        image: "https://placehold.co/300x300/004646/ffffff?text=RC",
+      },
+    ],
     achievements: [
       {
         id: "arach1",
@@ -256,21 +278,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/004646/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "arteam1",
-        name: "Vikram Choudhary",
-        role: "Founder & Director",
-        image: "https://placehold.co/300x300/004646/ffffff?text=VC",
-      },
-      {
-        id: "arteam2",
-        name: "Dr. Ritu Chauhan",
-        role: "Chief Veterinarian",
-        image: "https://placehold.co/300x300/004646/ffffff?text=RC",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+3",
@@ -279,19 +287,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo5",
     name: "Hope for Children",
-    regNumber: "NGO567890",
-    category: "Children",
-    location: "Chennai",
     description:
       "Hope for Children works towards providing a better future for orphaned and underprivileged children through education, healthcare, and overall development. We believe every child deserves a chance to thrive.",
-    verified: true,
-    trustScore: 93,
     logo: "https://placehold.co/200x200/00afaf/ffffff?text=HC",
     coverImage: "https://placehold.co/1200x400/00afaf/ffffff?text=Hope+for+Children",
     foundedYear: 2007,
     totalRaised: 12000000,
     supporters: 16000,
+    verified: true,
+    trustScore: 93,
+    regNumber: "NGO567890",
     upiId: "hopeforchildren@upi",
+    phone: "2222222222",
+    email: "hopeforchildren@example.com",
+    website: "www.hopeforchildren.com",
+    team: [
+      {
+        id: "hfcteam1",
+        name: "Lakshmi Venkatesh",
+        role: "Founder & President",
+        image: "https://placehold.co/300x300/00afaf/ffffff?text=LV",
+      },
+      {
+        id: "hfcteam2",
+        name: "Raj Kumar",
+        role: "Child Development Specialist",
+        image: "https://placehold.co/300x300/00afaf/ffffff?text=RK",
+      },
+    ],
     achievements: [
       {
         id: "hfcach1",
@@ -310,21 +333,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/00afaf/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "hfcteam1",
-        name: "Lakshmi Venkatesh",
-        role: "Founder & President",
-        image: "https://placehold.co/300x300/00afaf/ffffff?text=LV",
-      },
-      {
-        id: "hfcteam2",
-        name: "Raj Kumar",
-        role: "Child Development Specialist",
-        image: "https://placehold.co/300x300/00afaf/ffffff?text=RK",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+3",
@@ -333,19 +342,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo6",
     name: "Women's Empowerment Collective",
-    regNumber: "NGO234567",
-    category: "Women Empowerment",
-    location: "Kolkata",
     description:
       "Women's Empowerment Collective is dedicated to uplifting women through skill development, education, and entrepreneurship opportunities. We strive to create a society where women have equal rights and opportunities.",
-    verified: true,
-    trustScore: 89,
     logo: "https://placehold.co/200x200/008c8c/ffffff?text=WE",
     coverImage: "https://placehold.co/1200x400/008c8c/ffffff?text=Women's+Empowerment+Collective",
     foundedYear: 2011,
     totalRaised: 9000000,
     supporters: 11000,
+    verified: true,
+    trustScore: 89,
+    regNumber: "NGO234567",
     upiId: "womensempowerment@upi",
+    phone: "3333333333",
+    email: "womensempowerment@example.com",
+    website: "www.womensempowerment.com",
+    team: [
+      {
+        id: "weteam1",
+        name: "Sneha Banerjee",
+        role: "Founder & Executive Director",
+        image: "https://placehold.co/300x300/008c8c/ffffff?text=SB",
+      },
+      {
+        id: "weteam2",
+        name: "Tanya Mukherjee",
+        role: "Program Director",
+        image: "https://placehold.co/300x300/008c8c/ffffff?text=TM",
+      },
+    ],
     achievements: [
       {
         id: "weach1",
@@ -364,21 +388,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/008c8c/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "weteam1",
-        name: "Sneha Banerjee",
-        role: "Founder & Executive Director",
-        image: "https://placehold.co/300x300/008c8c/ffffff?text=SB",
-      },
-      {
-        id: "weteam2",
-        name: "Tanya Mukherjee",
-        role: "Program Director",
-        image: "https://placehold.co/300x300/008c8c/ffffff?text=TM",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+3",
@@ -387,19 +397,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo7",
     name: "Elder Care Society",
-    regNumber: "NGO678901",
-    category: "Elderly Care",
-    location: "Pune",
     description:
       "Elder Care Society is dedicated to improving the quality of life for senior citizens through care programs, medical support, and social engagement activities. We strive to create a world where the elderly live with dignity and joy.",
-    verified: true,
-    trustScore: 87,
     logo: "https://placehold.co/200x200/006969/ffffff?text=EC",
     coverImage: "https://placehold.co/1200x400/006969/ffffff?text=Elder+Care+Society",
     foundedYear: 2013,
     totalRaised: 5500000,
     supporters: 7500,
+    verified: true,
+    trustScore: 87,
+    regNumber: "NGO678901",
     upiId: "eldercaresociety@upi",
+    phone: "4444444444",
+    email: "eldercaresociety@example.com",
+    website: "www.eldercaresociety.com",
+    team: [
+      {
+        id: "ecteam1",
+        name: "Prakash Joshi",
+        role: "Founder & Chairman",
+        image: "https://placehold.co/300x300/006969/ffffff?text=PJ",
+      },
+      {
+        id: "ecteam2",
+        name: "Dr. Maya Desai",
+        role: "Medical Director",
+        image: "https://placehold.co/300x300/006969/ffffff?text=MD",
+      },
+    ],
     achievements: [
       {
         id: "ecach1",
@@ -418,21 +443,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/006969/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "ecteam1",
-        name: "Prakash Joshi",
-        role: "Founder & Chairman",
-        image: "https://placehold.co/300x300/006969/ffffff?text=PJ",
-      },
-      {
-        id: "ecteam2",
-        name: "Dr. Maya Desai",
-        role: "Medical Director",
-        image: "https://placehold.co/300x300/006969/ffffff?text=MD",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+3",
@@ -441,19 +452,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo8",
     name: "Disability Support Network",
-    regNumber: "NGO789012",
-    category: "Disability Support",
-    location: "Chennai",
     description:
       "Disability Support Network focuses on creating an inclusive society for people with disabilities through assistive technology, accessibility advocacy, and skill development programs. We believe in the potential of every individual.",
-    verified: true,
-    trustScore: 90,
     logo: "https://placehold.co/200x200/004646/ffffff?text=DS",
     coverImage: "https://placehold.co/1200x400/004646/ffffff?text=Disability+Support+Network",
     foundedYear: 2009,
     totalRaised: 11000000,
     supporters: 13500,
+    verified: true,
+    trustScore: 90,
+    regNumber: "NGO789012",
     upiId: "disabilitysupport@upi",
+    phone: "5555555555",
+    email: "disabilitysupport@example.com",
+    website: "www.disabilitysupport.com",
+    team: [
+      {
+        id: "dsteam1",
+        name: "Rahul Menon",
+        role: "Founder & Disability Rights Activist",
+        image: "https://placehold.co/300x300/004646/ffffff?text=RM",
+      },
+      {
+        id: "dsteam2",
+        name: "Priya Lakshmi",
+        role: "Inclusion Program Director",
+        image: "https://placehold.co/300x300/004646/ffffff?text=PL",
+      },
+    ],
     achievements: [
       {
         id: "dsach1",
@@ -472,21 +498,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/004646/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "dsteam1",
-        name: "Rahul Menon",
-        role: "Founder & Disability Rights Activist",
-        image: "https://placehold.co/300x300/004646/ffffff?text=RM",
-      },
-      {
-        id: "dsteam2",
-        name: "Priya Lakshmi",
-        role: "Inclusion Program Director",
-        image: "https://placehold.co/300x300/004646/ffffff?text=PL",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+3",
@@ -495,19 +507,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo9",
     name: "Disaster Relief Corps",
-    regNumber: "NGO890123",
-    category: "Disaster Relief",
-    location: "Hyderabad",
     description:
       "Disaster Relief Corps is dedicated to providing immediate assistance and long-term rehabilitation support to communities affected by natural disasters. We focus on emergency response, shelter, food, medical aid, and rebuilding efforts.",
-    verified: true,
-    trustScore: 95,
     logo: "https://placehold.co/200x200/00afaf/ffffff?text=DR",
     coverImage: "https://placehold.co/1200x400/00afaf/ffffff?text=Disaster+Relief+Corps",
     foundedYear: 2005,
     totalRaised: 25000000,
     supporters: 30000,
+    verified: true,
+    trustScore: 95,
+    regNumber: "NGO890123",
     upiId: "disasterreliefcorps@upi",
+    phone: "6666666666",
+    email: "disasterreliefcorps@example.com",
+    website: "www.disasterreliefcorps.com",
+    team: [
+      {
+        id: "drteam1",
+        name: "Karthik Reddy",
+        role: "Founder & Emergency Response Director",
+        image: "https://placehold.co/300x300/00afaf/ffffff?text=KR",
+      },
+      {
+        id: "drteam2",
+        name: "Sarita Kumari",
+        role: "Logistics & Relief Coordinator",
+        image: "https://placehold.co/300x300/00afaf/ffffff?text=SK",
+      },
+    ],
     achievements: [
       {
         id: "drach1",
@@ -526,21 +553,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/00afaf/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "drteam1",
-        name: "Karthik Reddy",
-        role: "Founder & Emergency Response Director",
-        image: "https://placehold.co/300x300/00afaf/ffffff?text=KR",
-      },
-      {
-        id: "drteam2",
-        name: "Sarita Kumari",
-        role: "Logistics & Relief Coordinator",
-        image: "https://placehold.co/300x300/00afaf/ffffff?text=SK",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+3",
@@ -549,19 +562,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo10",
     name: "Poverty Alleviation Trust",
-    regNumber: "NGO901234",
-    category: "Poverty Alleviation",
-    location: "Delhi",
     description:
       "Poverty Alleviation Trust works towards eradicating poverty through sustainable livelihood programs, microfinance initiatives, skill training, and community development. We believe in empowering communities to break the cycle of poverty.",
-    verified: true,
-    trustScore: 88,
     logo: "https://placehold.co/200x200/008c8c/ffffff?text=PA",
     coverImage: "https://placehold.co/1200x400/008c8c/ffffff?text=Poverty+Alleviation+Trust",
     foundedYear: 2010,
     totalRaised: 14000000,
     supporters: 17500,
+    verified: true,
+    trustScore: 88,
+    regNumber: "NGO901234",
     upiId: "povertyalleviation@upi",
+    phone: "7777777777",
+    email: "povertyalleviation@example.com",
+    website: "www.povertyalleviation.com",
+    team: [
+      {
+        id: "pateam1",
+        name: "Amar Singh",
+        role: "Founder & CEO",
+        image: "https://placehold.co/300x300/008c8c/ffffff?text=AS",
+      },
+      {
+        id: "pateam2",
+        name: "Nisha Sharma",
+        role: "Microfinance Director",
+        image: "https://placehold.co/300x300/008c8c/ffffff?text=NS",
+      },
+    ],
     achievements: [
       {
         id: "paach1",
@@ -580,21 +608,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/008c8c/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "pateam1",
-        name: "Amar Singh",
-        role: "Founder & CEO",
-        image: "https://placehold.co/300x300/008c8c/ffffff?text=AS",
-      },
-      {
-        id: "pateam2",
-        name: "Nisha Sharma",
-        role: "Microfinance Director",
-        image: "https://placehold.co/300x300/008c8c/ffffff?text=NS",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+3",
@@ -603,19 +617,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo11",
     name: "Digital Education Initiative",
-    regNumber: "NGO112233",
-    category: "Education",
-    location: "Bangalore",
     description:
       "Digital Education Initiative aims to bridge the digital divide by providing technology education and resources to underprivileged students. We focus on computer literacy, coding skills, and digital resource access in rural and urban schools.",
-    verified: true,
-    trustScore: 91,
     logo: "https://placehold.co/200x200/006969/ffffff?text=DE",
     coverImage: "https://placehold.co/1200x400/006969/ffffff?text=Digital+Education+Initiative",
     foundedYear: 2014,
     totalRaised: 8000000,
     supporters: 10000,
+    verified: true,
+    trustScore: 91,
+    regNumber: "NGO112233",
     upiId: "digitaleducation@upi",
+    phone: "8888888888",
+    email: "digitaleducation@example.com",
+    website: "www.digitaleducation.com",
+    team: [
+      {
+        id: "deteam1",
+        name: "Rajesh Kumar",
+        role: "Founder & Technology Director",
+        image: "https://placehold.co/300x300/006969/ffffff?text=RK",
+      },
+      {
+        id: "deteam2",
+        name: "Ananya Gupta",
+        role: "Education Program Head",
+        image: "https://placehold.co/300x300/006969/ffffff?text=AG",
+      },
+    ],
     achievements: [
       {
         id: "deach1",
@@ -634,21 +663,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/006969/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "deteam1",
-        name: "Rajesh Kumar",
-        role: "Founder & Technology Director",
-        image: "https://placehold.co/300x300/006969/ffffff?text=RK",
-      },
-      {
-        id: "deteam2",
-        name: "Ananya Gupta",
-        role: "Education Program Head",
-        image: "https://placehold.co/300x300/006969/ffffff?text=AG",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+3",
@@ -657,19 +672,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo12",
     name: "Clean Water Foundation",
-    regNumber: "NGO445566",
-    category: "Healthcare",
-    location: "Mumbai",
     description:
       "Clean Water Foundation is committed to providing access to clean and safe drinking water in water-scarce regions. We focus on water purification systems, rainwater harvesting, and hygiene education to prevent waterborne diseases.",
-    verified: true,
-    trustScore: 92,
     logo: "https://placehold.co/200x200/004646/ffffff?text=CW",
     coverImage: "https://placehold.co/1200x400/004646/ffffff?text=Clean+Water+Foundation",
     foundedYear: 2011,
     totalRaised: 13000000,
     supporters: 16000,
+    verified: true,
+    trustScore: 92,
+    regNumber: "NGO445566",
     upiId: "cleanwaterfoundation@upi",
+    phone: "9999999999",
+    email: "cleanwaterfoundation@example.com",
+    website: "www.cleanwaterfoundation.com",
+    team: [
+      {
+        id: "cwteam1",
+        name: "Vishal Patil",
+        role: "Founder & Executive Director",
+        image: "https://placehold.co/300x300/004646/ffffff?text=VP",
+      },
+      {
+        id: "cwteam2",
+        name: "Dr. Sunita Rao",
+        role: "Water Quality Specialist",
+        image: "https://placehold.co/300x300/004646/ffffff?text=SR",
+      },
+    ],
     achievements: [
       {
         id: "cwach1",
@@ -688,21 +718,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/004646/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "cwteam1",
-        name: "Vishal Patil",
-        role: "Founder & Executive Director",
-        image: "https://placehold.co/300x300/004646/ffffff?text=VP",
-      },
-      {
-        id: "cwteam2",
-        name: "Dr. Sunita Rao",
-        role: "Water Quality Specialist",
-        image: "https://placehold.co/300x300/004646/ffffff?text=SR",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+3",
@@ -711,19 +727,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo13",
     name: "Reforestation Alliance",
-    regNumber: "NGO778899",
-    category: "Environment",
-    location: "Dehradun",
     description:
       "Reforestation Alliance is dedicated to restoring forest ecosystems through tree planting, conservation, and community participation. We work to combat deforestation, protect biodiversity, and mitigate climate change impacts.",
-    verified: true,
-    trustScore: 89,
     logo: "https://placehold.co/200x200/00afaf/ffffff?text=RA",
     coverImage: "https://placehold.co/1200x400/00afaf/ffffff?text=Reforestation+Alliance",
     foundedYear: 2012,
     totalRaised: 9500000,
     supporters: 12500,
+    verified: true,
+    trustScore: 89,
+    regNumber: "NGO778899",
     upiId: "reforestationalliance@upi",
+    phone: "1010101010",
+    email: "reforestationalliance@example.com",
+    website: "www.reforestationalliance.com",
+    team: [
+      {
+        id: "rateam1",
+        name: "Arun Joshi",
+        role: "Founder & Conservation Director",
+        image: "https://placehold.co/300x300/00afaf/ffffff?text=AJ",
+      },
+      {
+        id: "rateam2",
+        name: "Deepa Rawat",
+        role: "Community Outreach Head",
+        image: "https://placehold.co/300x300/00afaf/ffffff?text=DR",
+      },
+    ],
     achievements: [
       {
         id: "raach1",
@@ -742,21 +773,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/00afaf/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "rateam1",
-        name: "Arun Joshi",
-        role: "Founder & Conservation Director",
-        image: "https://placehold.co/300x300/00afaf/ffffff?text=AJ",
-      },
-      {
-        id: "rateam2",
-        name: "Deepa Rawat",
-        role: "Community Outreach Head",
-        image: "https://placehold.co/300x300/00afaf/ffffff?text=DR",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+3",
@@ -765,19 +782,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo14",
     name: "Street Animal Rescue",
-    regNumber: "NGO334455",
-    category: "Animal Welfare",
-    location: "Ahmedabad",
     description:
       "Street Animal Rescue is committed to helping stray animals through rescue operations, medical care, sterilization programs, and adoption services. We believe in creating a compassionate society for all living beings.",
-    verified: true,
-    trustScore: 87,
     logo: "https://placehold.co/200x200/008c8c/ffffff?text=SA",
     coverImage: "https://placehold.co/1200x400/008c8c/ffffff?text=Street+Animal+Rescue",
     foundedYear: 2013,
     totalRaised: 4500000,
     supporters: 8000,
+    verified: true,
+    trustScore: 87,
+    regNumber: "NGO334455",
     upiId: "streetanimalrescue@upi",
+    phone: "1111111111",
+    email: "streetanimalrescue@example.com",
+    website: "www.streetanimalrescue.com",
+    team: [
+      {
+        id: "sateam1",
+        name: "Kavita Patel",
+        role: "Founder & Animal Welfare Activist",
+        image: "https://placehold.co/300x300/008c8c/ffffff?text=KP",
+      },
+      {
+        id: "sateam2",
+        name: "Dr. Nikhil Shah",
+        role: "Chief Veterinarian",
+        image: "https://placehold.co/300x300/008c8c/ffffff?text=NS",
+      },
+    ],
     achievements: [
       {
         id: "saach1",
@@ -796,21 +828,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/008c8c/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "sateam1",
-        name: "Kavita Patel",
-        role: "Founder & Animal Welfare Activist",
-        image: "https://placehold.co/300x300/008c8c/ffffff?text=KP",
-      },
-      {
-        id: "sateam2",
-        name: "Dr. Nikhil Shah",
-        role: "Chief Veterinarian",
-        image: "https://placehold.co/300x300/008c8c/ffffff?text=NS",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+3",
@@ -819,19 +837,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo15",
     name: "Rural Health Connect",
-    regNumber: "NGO667788",
-    category: "Healthcare",
-    location: "Lucknow",
     description:
       "Rural Health Connect bridges the healthcare gap in remote villages through mobile clinics, telemedicine, and health worker training. We focus on preventive care, maternal health, and managing chronic diseases in underserved areas.",
-    verified: true,
-    trustScore: 93,
     logo: "https://placehold.co/200x200/006969/ffffff?text=RH",
     coverImage: "https://placehold.co/1200x400/006969/ffffff?text=Rural+Health+Connect",
     foundedYear: 2008,
     totalRaised: 16000000,
     supporters: 19000,
+    verified: true,
+    trustScore: 93,
+    regNumber: "NGO667788",
     upiId: "ruralhealthconnect@upi",
+    phone: "1212121212",
+    email: "ruralhealthconnect@example.com",
+    website: "www.ruralhealthconnect.com",
+    team: [
+      {
+        id: "rhteam1",
+        name: "Dr. Alok Mishra",
+        role: "Founder & Medical Director",
+        image: "https://placehold.co/300x300/006969/ffffff?text=AM",
+      },
+      {
+        id: "rhteam2",
+        name: "Reena Singh",
+        role: "Rural Outreach Coordinator",
+        image: "https://placehold.co/300x300/006969/ffffff?text=RS",
+      },
+    ],
     achievements: [
       {
         id: "rhach1",
@@ -850,21 +883,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/006969/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "rhteam1",
-        name: "Dr. Alok Mishra",
-        role: "Founder & Medical Director",
-        image: "https://placehold.co/300x300/006969/ffffff?text=AM",
-      },
-      {
-        id: "rhteam2",
-        name: "Reena Singh",
-        role: "Rural Outreach Coordinator",
-        image: "https://placehold.co/300x300/006969/ffffff?text=RS",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+3",
@@ -873,19 +892,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo16",
     name: "Child Rights Foundation",
-    regNumber: "NGO998877",
-    category: "Children",
-    location: "Kolkata",
     description:
       "Child Rights Foundation works to protect children from abuse, exploitation, and trafficking. We focus on rescue operations, rehabilitation, education, and advocacy for stronger child protection laws and awareness.",
-    verified: true,
-    trustScore: 95,
     logo: "https://placehold.co/200x200/004646/ffffff?text=CR",
     coverImage: "https://placehold.co/1200x400/004646/ffffff?text=Child+Rights+Foundation",
     foundedYear: 2007,
     totalRaised: 18000000,
     supporters: 22000,
+    verified: true,
+    trustScore: 95,
+    regNumber: "NGO998877",
     upiId: "childrightsfoundation@upi",
+    phone: "1313131313",
+    email: "childrightsfoundation@example.com",
+    website: "www.childrightsfoundation.com",
+    team: [
+      {
+        id: "crteam1",
+        name: "Sonali Mukherjee",
+        role: "Founder & Child Rights Activist",
+        image: "https://placehold.co/300x300/004646/ffffff?text=SM",
+      },
+      {
+        id: "crteam2",
+        name: "Ravi Ghosh",
+        role: "Rescue Operations Head",
+        image: "https://placehold.co/300x300/004646/ffffff?text=RG",
+      },
+    ],
     achievements: [
       {
         id: "crach1",
@@ -904,21 +938,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/004646/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "crteam1",
-        name: "Sonali Mukherjee",
-        role: "Founder & Child Rights Activist",
-        image: "https://placehold.co/300x300/004646/ffffff?text=SM",
-      },
-      {
-        id: "crteam2",
-        name: "Ravi Ghosh",
-        role: "Rescue Operations Head",
-        image: "https://placehold.co/300x300/004646/ffffff?text=RG",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+3",
@@ -927,19 +947,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo17",
     name: "Women's Legal Aid",
-    regNumber: "NGO223344",
-    category: "Women Empowerment",
-    location: "Delhi",
     description:
       "Women's Legal Aid provides free legal assistance, counseling, and support to women facing domestic violence, discrimination, and injustice. We work to empower women through legal awareness and advocacy for gender equality.",
-    verified: true,
-    trustScore: 91,
     logo: "https://placehold.co/200x200/00afaf/ffffff?text=WL",
     coverImage: "https://placehold.co/1200x400/00afaf/ffffff?text=Women's+Legal+Aid",
     foundedYear: 2009,
     totalRaised: 7500000,
     supporters: 9500,
+    verified: true,
+    trustScore: 91,
+    regNumber: "NGO223344",
     upiId: "womenslegalaid@upi",
+    phone: "1414141414",
+    email: "womenslegalaid@example.com",
+    website: "www.womenslegalaid.com",
+    team: [
+      {
+        id: "wlteam1",
+        name: "Adv. Seema Verma",
+        role: "Founder & Legal Director",
+        image: "https://placehold.co/300x300/00afaf/ffffff?text=SV",
+      },
+      {
+        id: "wlteam2",
+        name: "Adv. Farhan Ahmed",
+        role: "Senior Legal Counsel",
+        image: "https://placehold.co/300x300/00afaf/ffffff?text=FA",
+      },
+    ],
     achievements: [
       {
         id: "wlach1",
@@ -958,21 +993,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/00afaf/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "wlteam1",
-        name: "Adv. Seema Verma",
-        role: "Founder & Legal Director",
-        image: "https://placehold.co/300x300/00afaf/ffffff?text=SV",
-      },
-      {
-        id: "wlteam2",
-        name: "Adv. Farhan Ahmed",
-        role: "Senior Legal Counsel",
-        image: "https://placehold.co/300x300/00afaf/ffffff?text=FA",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+3",
@@ -981,19 +1002,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo18",
     name: "Skill Development Hub",
-    regNumber: "NGO556677",
-    category: "Education",
-    location: "Pune",
     description:
       "Skill Development Hub focuses on equipping unemployed youth with market-relevant skills through vocational training, apprenticeships, and job placement support. We bridge the gap between education and employment needs.",
-    verified: true,
-    trustScore: 88,
     logo: "https://placehold.co/200x200/008c8c/ffffff?text=SD",
     coverImage: "https://placehold.co/1200x400/008c8c/ffffff?text=Skill+Development+Hub",
     foundedYear: 2012,
     totalRaised: 6800000,
     supporters: 8900,
+    verified: true,
+    trustScore: 88,
+    regNumber: "NGO556677",
     upiId: "skilldevelopment@upi",
+    phone: "1515151515",
+    email: "skilldevelopment@example.com",
+    website: "www.skilldevelopment.com",
+    team: [
+      {
+        id: "sdteam1",
+        name: "Avinash Tiwari",
+        role: "Founder & CEO",
+        image: "https://placehold.co/300x300/008c8c/ffffff?text=AT",
+      },
+      {
+        id: "sdteam2",
+        name: "Meenakshi Iyer",
+        role: "Training & Placement Director",
+        image: "https://placehold.co/300x300/008c8c/ffffff?text=MI",
+      },
+    ],
     achievements: [
       {
         id: "sdach1",
@@ -1012,21 +1048,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/008c8c/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "sdteam1",
-        name: "Avinash Tiwari",
-        role: "Founder & CEO",
-        image: "https://placehold.co/300x300/008c8c/ffffff?text=AT",
-      },
-      {
-        id: "sdteam2",
-        name: "Meenakshi Iyer",
-        role: "Training & Placement Director",
-        image: "https://placehold.co/300x300/008c8c/ffffff?text=MI",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+3",
@@ -1035,19 +1057,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo19",
     name: "Sustainable Villages Project",
-    regNumber: "NGO112233",
-    category: "Rural Development",
-    location: "Ahmedabad",
     description:
       "Sustainable Villages Project works to transform rural communities through integrated development approaches focusing on agriculture, water management, renewable energy, education, and healthcare. We create model villages that are self-reliant and environmentally sustainable.",
-    verified: true,
-    trustScore: 92,
     logo: "https://placehold.co/200x200/006969/ffffff?text=SV",
     coverImage: "https://placehold.co/1200x400/006969/ffffff?text=Sustainable+Villages+Project",
     foundedYear: 2011,
     totalRaised: 12500000,
     supporters: 15000,
+    verified: true,
+    trustScore: 92,
+    regNumber: "NGO112233",
     upiId: "sustainablevillages@upi",
+    phone: "1616161616",
+    email: "sustainablevillages@example.com",
+    website: "www.sustainablevillages.com",
+    team: [
+      {
+        id: "svteam1",
+        name: "Narendra Patel",
+        role: "Founder & Rural Development Expert",
+        image: "https://placehold.co/300x300/006969/ffffff?text=NP",
+      },
+      {
+        id: "svteam2",
+        name: "Leela Modi",
+        role: "Sustainable Agriculture Head",
+        image: "https://placehold.co/300x300/006969/ffffff?text=LM",
+      },
+    ],
     achievements: [
       {
         id: "svach1",
@@ -1066,21 +1103,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/006969/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "svteam1",
-        name: "Narendra Patel",
-        role: "Founder & Rural Development Expert",
-        image: "https://placehold.co/300x300/006969/ffffff?text=NP",
-      },
-      {
-        id: "svteam2",
-        name: "Leela Modi",
-        role: "Sustainable Agriculture Head",
-        image: "https://placehold.co/300x300/006969/ffffff?text=LM",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+3",
@@ -1089,19 +1112,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo20",
     name: "Mental Health Alliance",
-    regNumber: "NGO889977",
-    category: "Healthcare",
-    location: "Bangalore",
     description:
       "Mental Health Alliance is dedicated to improving mental health awareness, providing counseling services, and reducing stigma. We work through helplines, therapy sessions, awareness campaigns, and training programs for communities.",
-    verified: true,
-    trustScore: 89,
     logo: "https://placehold.co/200x200/004646/ffffff?text=MH",
     coverImage: "https://placehold.co/1200x400/004646/ffffff?text=Mental+Health+Alliance",
     foundedYear: 2013,
     totalRaised: 5800000,
     supporters: 7800,
+    verified: true,
+    trustScore: 89,
+    regNumber: "NGO889977",
     upiId: "mentalhealthalliance@upi",
+    phone: "1717171717",
+    email: "mentalhealthalliance@example.com",
+    website: "www.mentalhealthalliance.com",
+    team: [
+      {
+        id: "mhteam1",
+        name: "Dr. Rohini Nair",
+        role: "Founder & Clinical Psychologist",
+        image: "https://placehold.co/300x300/004646/ffffff?text=RN",
+      },
+      {
+        id: "mhteam2",
+        name: "Dr. Vikram Seth",
+        role: "Psychiatrist & Program Director",
+        image: "https://placehold.co/300x300/004646/ffffff?text=VS",
+      },
+    ],
     achievements: [
       {
         id: "mhach1",
@@ -1120,21 +1158,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/004646/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "mhteam1",
-        name: "Dr. Rohini Nair",
-        role: "Founder & Clinical Psychologist",
-        image: "https://placehold.co/300x300/004646/ffffff?text=RN",
-      },
-      {
-        id: "mhteam2",
-        name: "Dr. Vikram Seth",
-        role: "Psychiatrist & Program Director",
-        image: "https://placehold.co/300x300/004646/ffffff?text=VS",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+3",
@@ -1143,19 +1167,34 @@ export const mockNGOs: NGO[] = [
   {
     id: "ngo21",
     name: "Senior Citizens Welfare Trust",
-    regNumber: "NGO445566",
-    category: "Elderly Care",
-    location: "Chennai",
     description:
       "Senior Citizens Welfare Trust is dedicated to providing care, companionship, and support services to the elderly. We operate retirement homes, day care centers, medical assistance programs, and social engagement activities to ensure dignified aging.",
-    verified: true,
-    trustScore: 90,
     logo: "https://placehold.co/200x200/00afaf/ffffff?text=SC",
     coverImage: "https://placehold.co/1200x400/00afaf/ffffff?text=Senior+Citizens+Welfare+Trust",
     foundedYear: 2010,
     totalRaised: 7200000,
     supporters: 9200,
+    verified: true,
+    trustScore: 90,
+    regNumber: "NGO445566",
     upiId: "seniorcitizenstrust@upi",
+    phone: "1818181818",
+    email: "seniorcitizenstrust@example.com",
+    website: "www.seniorcitizenstrust.com",
+    team: [
+      {
+        id: "scteam1",
+        name: "V. Subramanian",
+        role: "Founder & Chairman",
+        image: "https://placehold.co/300x300/00afaf/ffffff?text=VS",
+      },
+      {
+        id: "scteam2",
+        name: "Dr. Lakshmi Raman",
+        role: "Geriatric Care Specialist",
+        image: "https://placehold.co/300x300/00afaf/ffffff?text=LR",
+      },
+    ],
     achievements: [
       {
         id: "scach1",
@@ -1174,21 +1213,7 @@ export const mockNGOs: NGO[] = [
         image: "https://placehold.co/600x400/00afaf/ffffff?text=Achievement+2",
       },
     ],
-    team: [
-      {
-        id: "scteam1",
-        name: "V. Subramanian",
-        role: "Founder & Chairman",
-        image: "https://placehold.co/300x300/00afaf/ffffff?text=VS",
-      },
-      {
-        id: "scteam2",
-        name: "Dr. Lakshmi Raman",
-        role: "Geriatric Care Specialist",
-        image: "https://placehold.co/300x300/00afaf/ffffff?text=LR",
-      },
-    ],
-    gallery: [
+    images: [
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+1",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+3",

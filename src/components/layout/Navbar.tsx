@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import NGOAnalyzer from "@/components/NGOAnalyzer";
 
 const Navbar = () => {
   const { theme, setTheme } = useTheme();
@@ -129,6 +130,9 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* NGO Analyzer Button */}
+          <NGOAnalyzer />
+          
           <Button
             variant="ghost"
             size="icon"
