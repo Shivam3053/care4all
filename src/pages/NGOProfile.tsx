@@ -23,24 +23,37 @@ import {
   CreditCard,
   Link2,
   Scan,
+  Loader2,
 } from "lucide-react";
 import DonationForm from "@/components/DonationForm";
 import NGOGallery from "@/components/NGOGallery";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import ExtensionDemo from "@/components/ExtensionDemo";
+import { Link } from "react-router-dom";
 
 const NGOProfile = () => {
   const { id } = useParams<{ id: string }>();
   const [ngo, setNgo] = useState<NGO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (id) {
-      const fetchedNgo = getNGOById(id);
-      setNgo(fetchedNgo || null);
-      setIsLoading(false);
+      try {
+        const fetchedNgo = getNGOById(id);
+        console.log("Fetched NGO:", fetchedNgo);
+        setNgo(fetchedNgo || null);
+        if (!fetchedNgo) {
+          setLoadingError(true);
+        }
+      } catch (error) {
+        console.error("Error fetching NGO:", error);
+        setLoadingError(true);
+      } finally {
+        setIsLoading(false);
+      }
     }
   }, [id]);
 
@@ -68,18 +81,21 @@ const NGOProfile = () => {
   if (isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="mt-4 text-muted-foreground">Loading NGO details...</p>
+        </div>
       </div>
     );
   }
 
-  if (!ngo) {
+  if (loadingError || !ngo) {
     return (
       <div className="container py-12 text-center">
         <h1 className="mb-4 text-3xl font-bold">NGO Not Found</h1>
-        <p>The NGO you're looking for doesn't exist or has been removed.</p>
+        <p className="mb-6 text-muted-foreground">The NGO you're looking for doesn't exist or has been removed.</p>
         <Button className="mt-4" asChild>
-          <a href="/ngos">Browse NGOs</a>
+          <Link to="/ngos">Browse NGOs</Link>
         </Button>
       </div>
     );

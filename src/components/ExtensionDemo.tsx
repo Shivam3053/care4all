@@ -14,7 +14,9 @@ import {
   Mail, 
   CheckCircle2,
   X,
-  Loader2
+  Loader2,
+  AlertTriangle,
+  MapPin
 } from "lucide-react";
 import WhatsappIcon from "./icons/WhatsappIcon";
 import { type NGO } from "@/data/mockData";
@@ -38,6 +40,7 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
 
   // Reset loading states when a new NGO is loaded
   useEffect(() => {
+    console.log("ExtensionDemo - NGO data:", ngo);
     setQrLoaded(false);
     setLogoLoaded(false);
   }, [ngo]);
@@ -61,6 +64,7 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
     supporters: 2500,
     trustScore: 92,
     regNumber: "NGO12345",
+    description: "A mock NGO description",
     achievements: [],
     team: []
   };
@@ -311,8 +315,5 @@ const ExtensionDemo: React.FC<ExtensionDemoProps> = ({
     </div>
   );
 };
-
-// Import MapPin icon since it's used in the component
-import { MapPin } from "lucide-react";
 
 export default ExtensionDemo;

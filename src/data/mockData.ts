@@ -118,6 +118,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+3",
     ],
+    category: "Education",
+    location: "Delhi",
   },
   {
     id: "ngo2",
@@ -173,6 +175,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+3",
     ],
+    category: "Environment",
+    location: "Delhi",
   },
   {
     id: "ngo3",
@@ -228,6 +232,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+3",
     ],
+    category: "Healthcare",
+    location: "Delhi",
   },
   {
     id: "ngo4",
@@ -283,6 +289,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+3",
     ],
+    category: "Animal Welfare",
+    location: "Delhi",
   },
   {
     id: "ngo5",
@@ -338,6 +346,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+3",
     ],
+    category: "Children",
+    location: "Delhi",
   },
   {
     id: "ngo6",
@@ -393,6 +403,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+3",
     ],
+    category: "Women Empowerment",
+    location: "Delhi",
   },
   {
     id: "ngo7",
@@ -448,6 +460,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+3",
     ],
+    category: "Elderly Care",
+    location: "Delhi",
   },
   {
     id: "ngo8",
@@ -503,6 +517,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+3",
     ],
+    category: "Disability Support",
+    location: "Delhi",
   },
   {
     id: "ngo9",
@@ -558,6 +574,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+3",
     ],
+    category: "Disaster Relief",
+    location: "Delhi",
   },
   {
     id: "ngo10",
@@ -613,6 +631,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+3",
     ],
+    category: "Poverty Alleviation",
+    location: "Delhi",
   },
   {
     id: "ngo11",
@@ -668,6 +688,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+3",
     ],
+    category: "Digital Education",
+    location: "Delhi",
   },
   {
     id: "ngo12",
@@ -723,6 +745,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+3",
     ],
+    category: "Clean Water",
+    location: "Delhi",
   },
   {
     id: "ngo13",
@@ -778,6 +802,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+3",
     ],
+    category: "Reforestation",
+    location: "Delhi",
   },
   {
     id: "ngo14",
@@ -833,6 +859,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+3",
     ],
+    category: "Street Animal Rescue",
+    location: "Delhi",
   },
   {
     id: "ngo15",
@@ -888,6 +916,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+3",
     ],
+    category: "Rural Health",
+    location: "Delhi",
   },
   {
     id: "ngo16",
@@ -943,6 +973,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+3",
     ],
+    category: "Child Rights",
+    location: "Delhi",
   },
   {
     id: "ngo17",
@@ -998,6 +1030,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+3",
     ],
+    category: "Women's Legal Aid",
+    location: "Delhi",
   },
   {
     id: "ngo18",
@@ -1053,6 +1087,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/008c8c/ffffff?text=Gallery+3",
     ],
+    category: "Skill Development",
+    location: "Delhi",
   },
   {
     id: "ngo19",
@@ -1108,6 +1144,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/006969/ffffff?text=Gallery+3",
     ],
+    category: "Sustainable Villages",
+    location: "Delhi",
   },
   {
     id: "ngo20",
@@ -1163,6 +1201,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/004646/ffffff?text=Gallery+3",
     ],
+    category: "Mental Health",
+    location: "Delhi",
   },
   {
     id: "ngo21",
@@ -1218,6 +1258,8 @@ export const mockNGOs: NGO[] = [
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+2",
       "https://placehold.co/600x400/00afaf/ffffff?text=Gallery+3",
     ],
+    category: "Senior Citizens",
+    location: "Delhi",
   },
 ];
 
