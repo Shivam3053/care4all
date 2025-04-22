@@ -1,3 +1,4 @@
+
 export interface NGO {
   id: string;
   name: string;
@@ -162,6 +163,112 @@ export const mockNGOs: NGO[] = [
       "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?auto=format&fit=crop&w=400&q=80",
       "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=400&q=80"
     ],
+  },
+  {
+    id: "4",
+    name: "Women Empowerment Trust",
+    category: "Education",
+    description: "Empowering women through education and skill development.",
+    location: "Jaipur, Rajasthan",
+    logo: "public/lovable-uploads/eced3ea6-c885-4367-852c-e1f274abca07.png",
+    coverImage: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80",
+    foundedYear: 2015,
+    totalRaised: 2100000,
+    supporters: 710,
+    verified: true,
+    trustScore: 89,
+    regNumber: "WET-556677",
+    upiId: "womenempower@upi",
+    phone: "917547453321",
+    email: "info@womenempowertrust.org",
+    website: "https://womenempowertrust.org",
+    team: [
+      {
+        id: "t5",
+        name: "Rekha Sharma",
+        role: "Founder & Chairperson",
+        image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=facearea&w=300&h=300&q=80"
+      },
+      {
+        id: "t6",
+        name: "Sunita Desai",
+        role: "Program Coordinator",
+        image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=facearea&w=300&h=300&q=80"
+      }
+    ],
+    achievements: [
+      {
+        id: "a4",
+        title: "5000+ Women Trained",
+        description: "Facilitated vocational and soft skills training for over 5000 women in Rajasthan.",
+        date: "2021-09-12",
+        image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "a5",
+        title: "Scholarship Program Launched",
+        description: "Launched a scholarship fund supporting girls to complete their secondary education.",
+        date: "2022-12-10",
+        image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80"
+      }
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=400&q=80",
+      "public/lovable-uploads/eced3ea6-c885-4367-852c-e1f274abca07.png"
+    ],
+  },
+  {
+    id: "5",
+    name: "Rural Development Initiative",
+    category: "Rural Development",
+    description: "Advancing development in rural Uttar Pradesh through education, healthcare, and infrastructure solutions.",
+    location: "Lucknow, Uttar Pradesh",
+    logo: "public/lovable-uploads/eced3ea6-c885-4367-852c-e1f274abca07.png",
+    coverImage: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?auto=format&fit=crop&w=1200&q=80",
+    foundedYear: 2010,
+    totalRaised: 4300000,
+    supporters: 1840,
+    verified: true,
+    trustScore: 86,
+    regNumber: "RDI-334422",
+    upiId: "ruraldev@upi",
+    phone: "919812345678",
+    email: "contact@ruraldevinitiative.org",
+    website: "https://ruraldevinitiative.org",
+    team: [
+      {
+        id: "t7",
+        name: "Anil Srivastava",
+        role: "Founder",
+        image: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?auto=format&fit=facearea&w=300&h=300&q=80"
+      },
+      {
+        id: "t8",
+        name: "Seema Verma",
+        role: "Project Lead",
+        image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=facearea&w=300&h=300&q=80"
+      }
+    ],
+    achievements: [
+      {
+        id: "a6",
+        title: "Clean Water Project",
+        description: "Established water purification units in 20 rural villages, benefitting over 10,000 residents.",
+        date: "2023-01-21",
+        image: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "a7",
+        title: "Healthcare Camps Conducted",
+        description: "Organized over 30 free healthcare camps across rural districts.",
+        date: "2022-05-17",
+        image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=600&q=80"
+      }
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=400&q=80",
+      "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?auto=format&fit=crop&w=400&q=80"
+    ]
   }
 ];
 
@@ -169,12 +276,16 @@ export const categories = [
   "Children & Youth",
   "Environment",
   "Healthcare",
+  "Education",
+  "Rural Development"
 ];
 
 export const locations = [
   "Mumbai, Maharashtra",
   "Bengaluru, Karnataka",
   "Delhi, NCR",
+  "Jaipur, Rajasthan",
+  "Lucknow, Uttar Pradesh"
 ];
 
 export const getNGOById = (id: string): NGO | undefined => {
