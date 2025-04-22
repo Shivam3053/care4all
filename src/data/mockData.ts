@@ -1,3 +1,4 @@
+
 export interface NGO {
   id: string;
   name: string;
@@ -517,3 +518,12 @@ export const mockNGOs: NGO[] = [
       "https://images.unsplash.com/photo-1559087867-ce4c91325525?auto=format&fit=crop&w=600&q=80",
       "https://images.unsplash.com/photo-1559087867-ce4c91325525?auto=format&fit=crop&w=600&q=80",
     ],
+    category: "Disability Support",
+    location: "Delhi",
+  }
+];
+
+// Helper function to get an NGO by ID
+export const getNGOById = (id: string): NGO | undefined => {
+  return mockNGOs.find(ngo => ngo.id === id);
+};
