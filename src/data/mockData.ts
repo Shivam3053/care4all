@@ -1,4 +1,3 @@
-
 export interface NGO {
   id: string;
   name: string;
@@ -170,29 +169,18 @@ export const categories = [
   "Children & Youth",
   "Environment",
   "Healthcare",
-  "Women Empowerment",
-  "Rural Development",
 ];
 
 export const locations = [
   "Mumbai, Maharashtra",
   "Bengaluru, Karnataka",
   "Delhi, NCR",
-  "Jaipur, Rajasthan",
-  "Lucknow, Uttar Pradesh",
 ];
 
 export const getNGOById = (id: string): NGO | undefined => {
   return mockNGOs.find((ngo) => ngo.id === id);
 };
 
-/**
- * Gets a specified number of featured NGOs from the mock data
- * @param count The number of NGOs to return
- * @returns Array of featured NGOs
- */
 export const getFeaturedNGOs = (count: number = 3): NGO[] => {
-  // In a real app, this would filter based on some "featured" criteria
-  // For now, we'll just return the first n NGOs from our mock data
   return mockNGOs.slice(0, count);
 };

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -9,75 +8,11 @@ import NGOFilter from "@/components/NGOFilter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search } from "lucide-react";
 
-// This would come from Supabase in a real app
-const mockNGOs = [
-  {
-    id: "1",
-    name: "Children First Foundation",
-    category: "Children & Youth",
-    description: "Supporting underprivileged children with education and healthcare",
-    location: "Mumbai, Maharashtra",
-    logo: "/placeholder.svg",
-    donorsCount: 120,
-    fundingGoal: 500000,
-    amountRaised: 320000,
-    verified: true
-  },
-  {
-    id: "2",
-    name: "EcoLife Initiative",
-    category: "Environment",
-    description: "Working towards a sustainable future through conservation efforts",
-    location: "Bengaluru, Karnataka",
-    logo: "/placeholder.svg",
-    donorsCount: 85,
-    fundingGoal: 300000,
-    amountRaised: 150000,
-    verified: true
-  },
-  {
-    id: "3",
-    name: "Healthcare For All",
-    category: "Healthcare",
-    description: "Providing medical assistance to underserved communities",
-    location: "Delhi, NCR",
-    logo: "/placeholder.svg",
-    donorsCount: 95,
-    fundingGoal: 400000,
-    amountRaised: 275000,
-    verified: true
-  },
-  {
-    id: "4",
-    name: "Women Empowerment Trust",
-    category: "Women Empowerment",
-    description: "Empowering women through education and skill development",
-    location: "Jaipur, Rajasthan",
-    logo: "/placeholder.svg",
-    donorsCount: 70,
-    fundingGoal: 250000,
-    amountRaised: 180000,
-    verified: true
-  },
-  {
-    id: "5",
-    name: "Rural Development Initiative",
-    category: "Rural Development",
-    description: "Improving infrastructure and livelihoods in rural areas",
-    location: "Lucknow, Uttar Pradesh",
-    logo: "/placeholder.svg",
-    donorsCount: 45,
-    fundingGoal: 200000,
-    amountRaised: 95000,
-    verified: true
-  }
-];
+import { getFeaturedNGOs, mockNGOs as allNGOs } from "@/data/mockData";
 
-// Simulated API call to fetch NGOs - in a real app this would be a Supabase query
 const fetchNGOs = async () => {
-  // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 1000));
-  return mockNGOs;
+  return allNGOs;
 };
 
 const NGOs = () => {
@@ -86,19 +21,16 @@ const NGOs = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [filteredNGOs, setFilteredNGOs] = useState([]);
 
-  // Use React Query to fetch NGOs
   const { data: ngos, isLoading, error } = useQuery({
     queryKey: ['ngos'],
     queryFn: fetchNGOs,
   });
 
-  // Filter NGOs based on search and categories
   useEffect(() => {
     if (!ngos) return;
 
     let filtered = ngos;
 
-    // Filter by search term
     if (search) {
       filtered = filtered.filter(ngo => 
         ngo.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -107,14 +39,12 @@ const NGOs = () => {
       );
     }
 
-    // Filter by selected categories
     if (selectedCategories.length > 0) {
       filtered = filtered.filter(ngo => 
         selectedCategories.includes(ngo.category)
       );
     }
 
-    // Only include verified NGOs
     filtered = filtered.filter(ngo => ngo.verified === true);
 
     setFilteredNGOs(filtered);
