@@ -3,6 +3,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+// Replace these with your own Supabase project credentials
+// You can find these in your Supabase project settings > API
 const SUPABASE_URL = "https://otgsngjfsmwacekmqmpf.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90Z3NuZ2pmc213YWNla21xbXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIwMzU3MDgsImV4cCI6MjA1NzYxMTcwOH0.A9UB5J5u8umXAzATEdhnqeaVux3VRxTE9X3Euort-uE";
 
@@ -16,3 +18,4 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   }
 });
+
