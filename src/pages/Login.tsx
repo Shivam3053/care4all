@@ -13,7 +13,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail, Lock, User, Building, Shield } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Building, Shield, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Tabs,
@@ -21,12 +21,14 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const { signIn, isLoading, isAuthenticated, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [userRole, setUserRole] = useState(searchParams.get("role") || "donor");
@@ -54,6 +56,7 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError(null);
     
     if (!email || !password) {
       toast.error("Please enter both email and password");
@@ -63,9 +66,10 @@ const Login = () => {
     try {
       await signIn(email, password);
       // Redirection is handled in the useEffect
-    } catch (error) {
+    } catch (error: any) {
       // Error handling is done in the auth context
       console.error("Login error:", error);
+      setLoginError(error.message || "An error occurred during login");
     }
   };
 
@@ -84,6 +88,13 @@ const Login = () => {
         </CardHeader>
         
         <CardContent>
+          {loginError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{loginError}</AlertDescription>
+            </Alert>
+          )}
+
           <Tabs 
             defaultValue={userRole} 
             onValueChange={setUserRole} 
@@ -186,6 +197,13 @@ const Login = () => {
               )}
             </Button>
           </form>
+
+          <div className="mt-4 text-sm text-center text-muted-foreground">
+            <p>
+              Using a local development environment? Make sure to configure your Supabase URL Configuration settings to include{" "}
+              <span className="font-mono text-xs bg-muted px-1 py-0.5 rounded">http://localhost:3000</span>
+            </p>
+          </div>
         </CardContent>
         
         <CardFooter className="flex flex-col space-y-4">

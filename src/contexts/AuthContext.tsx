@@ -124,12 +124,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Sign in error:", error);
+        throw error;
+      }
 
       toast.success("Successfully signed in!");
     } catch (error: any) {
-      toast.error(error.message || "Login failed");
-      console.error("Sign in error:", error);
+      console.error("Login attempt failed:", error);
+      let errorMessage = "Login failed";
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.toString().includes("Unexpected end of JSON")) {
+        errorMessage = "Authentication error. Please check your Supabase project configuration.";
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
