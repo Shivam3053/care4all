@@ -1,15 +1,28 @@
+
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Heart, CreditCard, Clock, BarChart3, AlertCircle, Filter } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useDonations } from "@/hooks/useDonations";
 
 const Dashboard = () => {
   const { isAuthenticated, user } = useAuth();
-  const { recentDonations, totalDonated } = useDonations();
   
+  // Placeholder data for the dashboard
+  const recentDonations = [
+    { id: 1, ngo: "EduReach Foundation", amount: 1000, date: "2023-06-10" },
+    { id: 2, ngo: "GreenEarth Initiative", amount: 500, date: "2023-05-25" },
+    { id: 3, ngo: "HealthCare For All", amount: 2000, date: "2023-04-15" },
+  ];
+
+  const monthlyCauses = [
+    { name: "Education", amount: 1500, percentage: 50 },
+    { name: "Environment", amount: 900, percentage: 30 },
+    { name: "Healthcare", amount: 600, percentage: 20 },
+  ];
+
   if (!isAuthenticated) {
     return (
       <div className="container flex min-h-[80vh] flex-col items-center justify-center py-12 text-center">
@@ -65,7 +78,7 @@ const Dashboard = () => {
           <CardContent className="flex items-center justify-between p-6">
             <div>
               <p className="text-sm text-muted-foreground">Total Donated</p>
-              <p className="text-3xl font-bold">₹{totalDonated.toLocaleString()}</p>
+              <p className="text-3xl font-bold">₹3,000</p>
             </div>
             <div className="rounded-full bg-primary/10 p-3 text-primary">
               <CreditCard className="h-6 w-6" />
@@ -117,13 +130,13 @@ const Dashboard = () => {
               <Card key={donation.id}>
                 <CardContent className="flex items-center justify-between p-4">
                   <div>
-                    <p className="font-medium">{donation.ngo_name}</p>
+                    <p className="font-medium">{donation.ngo}</p>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(donation.created_at).toLocaleDateString()}
+                      {new Date(donation.date).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">₹{donation.amount.toLocaleString()}</p>
+                    <p className="font-medium">₹{donation.amount}</p>
                     <Button variant="link" className="h-auto p-0 text-xs">
                       Receipt
                     </Button>

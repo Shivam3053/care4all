@@ -8,12 +8,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 interface DonationFormProps {
   ngoName: string;
-  ngoId: string;
   upiId: string;
 }
 
@@ -25,25 +22,15 @@ const donationOptions = [
   { value: "custom", label: "Custom Amount" },
 ];
 
-const DonationForm = ({ ngoName, ngoId, upiId }: DonationFormProps) => {
+const DonationForm = ({ ngoName, upiId }: DonationFormProps) => {
   const [amount, setAmount] = useState(donationOptions[1].value);
   const [customAmount, setCustomAmount] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
 
-  const handleDonate = async () => {
-    if (!user) {
-      toast({
-        title: "Please login",
-        description: "You need to be logged in to make a donation",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleDonate = () => {
     const donationAmount = amount === "custom" ? customAmount : amount;
 
     if (!donationAmount || Number(donationAmount) <= 0) {
@@ -57,34 +44,21 @@ const DonationForm = ({ ngoName, ngoId, upiId }: DonationFormProps) => {
 
     setIsProcessing(true);
 
-    try {
-      const { error } = await supabase
-        .from('donations')
-        .insert({
-          user_id: user.id,
-          ngo_id: ngoId,
-          amount: Number(donationAmount),
-          ngo_name: ngoName,
-          donor_name: user.email,
-          payment_method: 'upi',
-          status: 'completed'
-        });
-
-      if (error) throw error;
-
-      setIsSuccess(true);
-      setTimeout(() => setIsSuccess(false), 3000);
-
-    } catch (error) {
-      console.error('Error processing donation:', error);
-      toast({
-        title: "Error",
-        description: "Failed to process donation. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
+    // Simulate payment processing
+    setTimeout(() => {
       setIsProcessing(false);
-    }
+      setIsSuccess(true);
+
+      toast({
+        title: "Donation successful!",
+        description: `Your ${isRecurring ? "monthly " : ""}donation of ₹${donationAmount} to ${ngoName} has been processed. Thank you for your support!`,
+      });
+
+      // Reset success state after a delay
+      setTimeout(() => {
+        setIsSuccess(false);
+      }, 3000);
+    }, 2000);
   };
 
   return (
