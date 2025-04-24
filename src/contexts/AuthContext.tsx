@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -32,6 +33,9 @@ interface AuthContextType {
   getVerifiedNGOs: () => Promise<any[]>;
   getUserRoleLabel: () => string;
   getUserDashboardPath: () => string;
+  // New admin methods
+  verifyNGO: (ngoId: string) => Promise<void>;
+  rejectNGO: (ngoId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -141,6 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       toast.error(errorMessage);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -264,6 +269,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const verifyNGO = async (ngoId: string) => {
+    try {
+      setIsLoading(true);
+      
+      // In a real implementation, you would call Supabase functions or RPC
+      // For demo purposes, we'll just log this action
+      console.log(`Admin ${user?.id} verified NGO ${ngoId}`);
+      
+      toast.success("NGO has been verified successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to verify NGO");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const rejectNGO = async (ngoId: string) => {
+    try {
+      setIsLoading(true);
+      
+      // In a real implementation, you would call Supabase functions or RPC
+      // For demo purposes, we'll just log this action
+      console.log(`Admin ${user?.id} rejected NGO ${ngoId}`);
+      
+      toast.success("NGO has been rejected");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to reject NGO");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const hasPermission = (permission: string): boolean => {
     if (!user) return false;
     
@@ -289,6 +326,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isNGOVerified = async (ngoId: string): Promise<boolean> => {
     try {
+      // In a real implementation, this would check a database
+      // For demo purposes we'll use the mock function
       return new Promise(resolve => {
         setTimeout(() => {
           const isVerified = Math.random() > 0.3;
@@ -303,6 +342,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getVerifiedNGOs = async (): Promise<any[]> => {
     try {
+      // In a real implementation, this would query a database
+      // For demo purposes we'll use the mock data
       return new Promise(resolve => {
         setTimeout(() => {
           const mockNGOs = [
@@ -377,7 +418,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isNGOVerified,
     getVerifiedNGOs,
     getUserRoleLabel,
-    getUserDashboardPath
+    getUserDashboardPath,
+    verifyNGO,
+    rejectNGO
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
