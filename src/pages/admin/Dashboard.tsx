@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,8 +14,38 @@ import { CheckCircle, X, AlertTriangle, Search, Plus, UserCheck, Building, Mail,
 import { useAuth } from "@/contexts/AuthContext";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { toast } from "sonner";
-import { supabase, adminOperations } from "@/integrations/supabase/client";
 
+// Mock data for pending NGOs
+const mockPendingNGOs = [
+  {
+    id: "101",
+    name: "Green Earth Association",
+    category: "Environment",
+    description: "Working on environmental conservation and sustainable practices",
+    location: "Pune, Maharashtra",
+    logo: "/placeholder.svg", 
+    registrationDate: "2023-04-12",
+    email: "contact@greenearth.org",
+    phone: "+91 98765 43210",
+    documents: ["registration.pdf", "tax_exemption.pdf"],
+    verified: false
+  },
+  {
+    id: "102",
+    name: "Child Education Initiative",
+    category: "Education",
+    description: "Providing quality education to underprivileged children",
+    location: "Chennai, Tamil Nadu",
+    logo: "/placeholder.svg",
+    registrationDate: "2023-05-20",
+    email: "info@childedu.org",
+    phone: "+91 87654 32109",
+    documents: ["org_certificate.pdf", "annual_report.pdf"],
+    verified: false
+  }
+];
+
+// Mock data for contact messages
 const mockContactMessages = [
   {
     id: "201",
@@ -42,16 +73,67 @@ const mockContactMessages = [
   }
 ];
 
+// Mock data for verified NGOs
+const mockVerifiedNGOs = [
+  {
+    id: "1",
+    name: "Children First Foundation",
+    category: "Children & Youth",
+    description: "Supporting underprivileged children with education and healthcare",
+    location: "Mumbai, Maharashtra",
+    logo: "/placeholder.svg",
+    verified: true
+  },
+  {
+    id: "2",
+    name: "EcoLife Initiative",
+    category: "Environment",
+    description: "Working towards a sustainable future through conservation efforts",
+    location: "Bengaluru, Karnataka",
+    logo: "/placeholder.svg",
+    verified: true
+  }
+];
+
+// Mock data for users
+const mockUsers = [
+  {
+    id: "301",
+    name: "Anil Kumar",
+    email: "anil.k@example.com",
+    role: "donor",
+    joinDate: "2023-03-10",
+    donations: 5,
+    status: "active"
+  },
+  {
+    id: "302",
+    name: "Sarita Devi",
+    email: "sarita.d@example.com",
+    role: "ngo_admin",
+    joinDate: "2023-04-05",
+    ngoName: "Women Empowerment Trust",
+    status: "active"
+  },
+  {
+    id: "303",
+    name: "Vikram Singh",
+    email: "vikram.s@example.com",
+    role: "super_admin",
+    joinDate: "2023-02-15",
+    status: "active"
+  }
+];
+
 const AdminDashboard = () => {
   const { user, isAuthenticated, hasPermission } = useAuth();
-  const [pendingNGOs, setPendingNGOs] = useState([]);
-  const [verifiedNGOs, setVerifiedNGOs] = useState([]);
+  const [pendingNGOs, setPendingNGOs] = useState(mockPendingNGOs);
+  const [verifiedNGOs, setVerifiedNGOs] = useState(mockVerifiedNGOs);
   const [contactMessages, setContactMessages] = useState(mockContactMessages);
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState(mockUsers);
   const [activeTab, setActiveTab] = useState("pending-ngos");
-  const [isLoading, setIsLoading] = useState(true);
-  const [apiError, setApiError] = useState<string | null>(null);
   
+  // For new NGO form
   const [newNGO, setNewNGO] = useState({
     name: "",
     category: "",
@@ -62,91 +144,33 @@ const AdminDashboard = () => {
     website: ""
   });
 
-  useEffect(() => {
-    fetchNGOData();
-    fetchUserData();
-  }, []);
-
-  const fetchNGOData = async () => {
-    setIsLoading(true);
-    setApiError(null);
+  // Helper functions
+  const verifyNGO = (ngoId: string) => {
+    // In a real app, this would call Supabase to update the NGO's verification status
+    const updatedPendingNGOs = pendingNGOs.filter(ngo => ngo.id !== ngoId);
+    const ngoToVerify = pendingNGOs.find(ngo => ngo.id === ngoId);
     
-    try {
-      const { pendingNGOs: pending, verifiedNGOs: verified, error } = await adminOperations.getAllNGOs();
-      
-      if (error) {
-        console.error("Error fetching NGO data:", error);
-        setApiError("Failed to load NGO data. Please try again.");
-        return;
-      }
-      
-      setPendingNGOs(pending);
-      setVerifiedNGOs(verified);
-    } catch (error) {
-      console.error("Error in NGO data fetch:", error);
-      setApiError("An unexpected error occurred while loading NGO data.");
-    } finally {
-      setIsLoading(false);
+    if (ngoToVerify) {
+      const verifiedNGO = { ...ngoToVerify, verified: true };
+      setVerifiedNGOs([...verifiedNGOs, verifiedNGO]);
+      setPendingNGOs(updatedPendingNGOs);
+      toast.success(`${ngoToVerify.name} has been verified successfully`);
     }
   };
 
-  const fetchUserData = async () => {
-    try {
-      const { data, error } = await adminOperations.getAllUsers();
-      
-      if (error) {
-        console.error("Error fetching user data:", error);
-        return;
-      }
-      
-      setUsers(data);
-    } catch (error) {
-      console.error("Error in user data fetch:", error);
-    }
-  };
-
-  const verifyNGO = async (ngoId: string) => {
-    try {
-      const { error } = await adminOperations.verifyNGO(ngoId);
-      
-      if (error) {
-        toast.error("Failed to verify NGO: " + error.message);
-        return;
-      }
-      
-      const ngoToVerify = pendingNGOs.find(ngo => ngo.id === ngoId);
-      if (ngoToVerify) {
-        setPendingNGOs(pendingNGOs.filter(ngo => ngo.id !== ngoId));
-        setVerifiedNGOs([...verifiedNGOs, { ...ngoToVerify, verified: true }]);
-        toast.success(`${ngoToVerify.name} has been verified successfully`);
-      }
-    } catch (error) {
-      console.error("Error verifying NGO:", error);
-      toast.error("An error occurred while verifying the NGO.");
-    }
-  };
-
-  const rejectNGO = async (ngoId: string) => {
-    try {
-      const { error } = await adminOperations.rejectNGO(ngoId);
-      
-      if (error) {
-        toast.error("Failed to reject NGO: " + error.message);
-        return;
-      }
-      
-      const ngoToReject = pendingNGOs.find(ngo => ngo.id === ngoId);
-      if (ngoToReject) {
-        setPendingNGOs(pendingNGOs.filter(ngo => ngo.id !== ngoId));
-        toast.success(`${ngoToReject.name} has been rejected`);
-      }
-    } catch (error) {
-      console.error("Error rejecting NGO:", error);
-      toast.error("An error occurred while rejecting the NGO.");
+  const rejectNGO = (ngoId: string) => {
+    // In a real app, this would call Supabase to delete or mark the NGO as rejected
+    const updatedPendingNGOs = pendingNGOs.filter(ngo => ngo.id !== ngoId);
+    const ngoToReject = pendingNGOs.find(ngo => ngo.id === ngoId);
+    
+    setPendingNGOs(updatedPendingNGOs);
+    if (ngoToReject) {
+      toast.success(`${ngoToReject.name} has been rejected`);
     }
   };
 
   const deleteNGO = (ngoId: string) => {
+    // In a real app, this would call Supabase to delete the NGO
     const updatedVerifiedNGOs = verifiedNGOs.filter(ngo => ngo.id !== ngoId);
     const ngoToDelete = verifiedNGOs.find(ngo => ngo.id === ngoId);
     
@@ -157,6 +181,7 @@ const AdminDashboard = () => {
   };
 
   const updateMessageStatus = (messageId: string, status: string) => {
+    // In a real app, this would call Supabase to update the message status
     const updatedMessages = contactMessages.map(message => 
       message.id === messageId ? { ...message, status } : message
     );
@@ -165,35 +190,32 @@ const AdminDashboard = () => {
     toast.success(`Message status updated to ${status}`);
   };
 
-  const handleAddNGO = async (e: React.FormEvent) => {
+  const handleAddNGO = (e: React.FormEvent) => {
     e.preventDefault();
     
-    try {
-      const newNGOWithId = {
-        ...newNGO,
-        id: Math.random().toString(36).substr(2, 9),
-        logo: "/placeholder.svg",
-        registrationDate: new Date().toISOString().split('T')[0],
-        verified: true
-      };
-      
-      setVerifiedNGOs([...verifiedNGOs, newNGOWithId]);
-      
-      setNewNGO({
-        name: "",
-        category: "",
-        description: "",
-        location: "",
-        email: "",
-        phone: "",
-        website: ""
-      });
-      
-      toast.success("New NGO added successfully");
-    } catch (error) {
-      console.error("Error adding NGO:", error);
-      toast.error("Failed to add NGO. Please try again.");
-    }
+    // In a real app, this would call Supabase to add a new NGO
+    const newNGOWithId = {
+      ...newNGO,
+      id: Math.random().toString(36).substr(2, 9),
+      logo: "/placeholder.svg",
+      registrationDate: new Date().toISOString().split('T')[0],
+      verified: true
+    };
+    
+    setVerifiedNGOs([...verifiedNGOs, newNGOWithId]);
+    
+    // Reset form
+    setNewNGO({
+      name: "",
+      category: "",
+      description: "",
+      location: "",
+      email: "",
+      phone: "",
+      website: ""
+    });
+    
+    toast.success("New NGO added successfully");
   };
 
   const handleNGOInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -201,6 +223,7 @@ const AdminDashboard = () => {
     setNewNGO(prev => ({ ...prev, [name]: value }));
   };
 
+  // Check if user has admin permissions
   if (!isAuthenticated || !hasPermission("admin_dashboard")) {
     return (
       <div className="container py-12 text-center">
@@ -238,25 +261,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {apiError && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertTriangle className="h-4 w-4 mr-2" />
-          <AlertDescription>{apiError}</AlertDescription>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="ml-auto"
-            onClick={() => {
-              setApiError(null);
-              fetchNGOData();
-              fetchUserData();
-            }}
-          >
-            Retry
-          </Button>
-        </Alert>
-      )}
-
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-8">
         <TabsList className="grid grid-cols-5 w-full">
           <TabsTrigger value="pending-ngos" className="flex items-center gap-1">
@@ -291,19 +295,14 @@ const AdminDashboard = () => {
           </TabsTrigger>
         </TabsList>
 
+        {/* Pending NGOs Tab */}
         <TabsContent value="pending-ngos" className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">NGOs Awaiting Verification</h2>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1"
-                onClick={fetchNGOData}
-                disabled={isLoading}
-              >
-                <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
+              <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <RefreshCcw className="h-4 w-4" />
+                <span>Refresh</span>
               </Button>
               <Button variant="outline" size="sm" className="flex items-center gap-1">
                 <Filter className="h-4 w-4" />
@@ -312,11 +311,7 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          ) : pendingNGOs.length === 0 ? (
+          {pendingNGOs.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="pt-6 text-center">
                 <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -397,6 +392,7 @@ const AdminDashboard = () => {
           )}
         </TabsContent>
 
+        {/* Verified NGOs Tab */}
         <TabsContent value="verified-ngos" className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Verified NGOs</h2>
@@ -408,68 +404,57 @@ const AdminDashboard = () => {
                   className="pl-9 w-[250px]"
                 />
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1"
-                onClick={fetchNGOData}
-                disabled={isLoading}
-              >
-                <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
+              <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <Filter className="h-4 w-4" />
+                <span>Filter</span>
               </Button>
             </div>
           </div>
 
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {verifiedNGOs.map((ngo) => (
-                <Card key={ngo.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="h-14 w-14 rounded-lg bg-muted flex items-center justify-center">
-                        <img 
-                          src={ngo.logo} 
-                          alt={ngo.name} 
-                          className="h-10 w-10 object-contain"
-                        />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {verifiedNGOs.map((ngo) => (
+              <Card key={ngo.id}>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="h-14 w-14 rounded-lg bg-muted flex items-center justify-center">
+                      <img 
+                        src={ngo.logo} 
+                        alt={ngo.name} 
+                        className="h-10 w-10 object-contain"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold">{ngo.name}</h3>
+                          <VerifiedBadge className="text-xs" />
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteNGO(ngo.id)}
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <X className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold">{ngo.name}</h3>
-                            <VerifiedBadge className="text-xs" />
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteNGO(ngo.id)}
-                            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          >
-                            <X className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{ngo.description}</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <div>
+                          <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs">{ngo.category}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2">{ngo.description}</p>
-                        <div className="flex items-center justify-between mt-2">
-                          <div>
-                            <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs">{ngo.category}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">{ngo.location}</span>
-                        </div>
+                        <span className="text-xs text-muted-foreground">{ngo.location}</span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
 
+        {/* Add NGO Tab */}
         <TabsContent value="add-ngo" className="space-y-6">
           <Card>
             <CardHeader>
@@ -588,6 +573,7 @@ const AdminDashboard = () => {
           </Card>
         </TabsContent>
 
+        {/* Messages Tab */}
         <TabsContent value="messages" className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Contact Messages</h2>
@@ -654,6 +640,7 @@ const AdminDashboard = () => {
           </div>
         </TabsContent>
 
+        {/* Users Tab */}
         <TabsContent value="users" className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Manage Users</h2>
@@ -665,100 +652,88 @@ const AdminDashboard = () => {
                   className="pl-9 w-[250px]"
                 />
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1"
-                onClick={fetchUserData}
-                disabled={isLoading}
-              >
-                <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
+              <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <Filter className="h-4 w-4" />
+                <span>Filter</span>
               </Button>
             </div>
           </div>
 
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {users.map((user) => (
-                <Card key={user.id}>
-                  <CardContent className="p-4">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-10 w-10">
-                            <div className="bg-primary text-primary-foreground h-full w-full flex items-center justify-center text-lg font-semibold">
-                              {user.name[0]}
-                            </div>
-                          </Avatar>
-                          <div>
-                            <h3 className="font-medium">{user.name}</h3>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
+          <div className="space-y-4">
+            {users.map((user) => (
+              <Card key={user.id}>
+                <CardContent className="p-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-10 w-10">
+                          <div className="bg-primary text-primary-foreground h-full w-full flex items-center justify-center text-lg font-semibold">
+                            {user.name[0]}
                           </div>
-                        </div>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                          <div className="flex items-center">
-                            <span className="font-medium mr-1">Role:</span>
-                            <span className={`px-2 py-0.5 rounded-full text-xs ${
-                              user.role === 'super_admin' 
-                                ? 'bg-primary text-primary-foreground' 
-                                : user.role === 'ngo_admin'
-                                  ? 'bg-blue-100 text-blue-700'
-                                  : 'bg-green-100 text-green-700'
-                            }`}>
-                              {user.role === 'super_admin' 
-                                ? 'Admin' 
-                                : user.role === 'ngo_admin'
-                                  ? 'NGO Admin'
-                                  : 'Donor'
-                              }
-                            </span>
-                          </div>
-                          <div>
-                            <span className="font-medium mr-1">Joined:</span>
-                            <span>{user.joinDate}</span>
-                          </div>
-                          {user.role === 'donor' && (
-                            <div>
-                              <span className="font-medium mr-1">Donations:</span>
-                              <span>{user.donations}</span>
-                            </div>
-                          )}
-                          {user.role === 'ngo_admin' && user.ngoName && (
-                            <div>
-                              <span className="font-medium mr-1">NGO:</span>
-                              <span>{user.ngoName}</span>
-                            </div>
-                          )}
+                        </Avatar>
+                        <div>
+                          <h3 className="font-medium">{user.name}</h3>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
-                      <div className="flex gap-2 self-end md:self-center">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                        >
-                          View Details
-                        </Button>
-                        {user.role !== 'super_admin' && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="text-destructive border-destructive hover:bg-destructive/10"
-                          >
-                            {user.status === 'banned' ? 'Enable Account' : 'Disable Account'}
-                          </Button>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                        <div className="flex items-center">
+                          <span className="font-medium mr-1">Role:</span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs ${
+                            user.role === 'super_admin' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : user.role === 'ngo_admin'
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-green-100 text-green-700'
+                          }`}>
+                            {user.role === 'super_admin' 
+                              ? 'Admin' 
+                              : user.role === 'ngo_admin'
+                                ? 'NGO Admin'
+                                : 'Donor'
+                            }
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium mr-1">Joined:</span>
+                          <span>{user.joinDate}</span>
+                        </div>
+                        {user.role === 'donor' && (
+                          <div>
+                            <span className="font-medium mr-1">Donations:</span>
+                            <span>{user.donations}</span>
+                          </div>
+                        )}
+                        {user.role === 'ngo_admin' && user.ngoName && (
+                          <div>
+                            <span className="font-medium mr-1">NGO:</span>
+                            <span>{user.ngoName}</span>
+                          </div>
                         )}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                    <div className="flex gap-2 self-end md:self-center">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                      >
+                        View Details
+                      </Button>
+                      {user.role !== 'super_admin' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="text-destructive border-destructive hover:bg-destructive/10"
+                        >
+                          Disable
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
