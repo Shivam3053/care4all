@@ -1,75 +1,27 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Heart, CreditCard, Clock, BarChart3, AlertCircle, Filter } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-
-interface Donation {
-  id: string;
-  ngo_name: string;
-  amount: number;
-  created_at: string;
-  status: string;
-}
 
 const Dashboard = () => {
   const { isAuthenticated, user } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
-  const [recentDonations, setRecentDonations] = useState<Donation[]>([]);
-  const [totalDonated, setTotalDonated] = useState(0);
-  const [ngosSupported, setNgosSupported] = useState(0);
   
-  // Monthly causes data
-  const [monthlyCauses, setMonthlyCauses] = useState([
+  // Placeholder data for the dashboard
+  const recentDonations = [
+    { id: 1, ngo: "EduReach Foundation", amount: 1000, date: "2023-06-10" },
+    { id: 2, ngo: "GreenEarth Initiative", amount: 500, date: "2023-05-25" },
+    { id: 3, ngo: "HealthCare For All", amount: 2000, date: "2023-04-15" },
+  ];
+
+  const monthlyCauses = [
     { name: "Education", amount: 1500, percentage: 50 },
     { name: "Environment", amount: 900, percentage: 30 },
     { name: "Healthcare", amount: 600, percentage: 20 },
-  ]);
-  
-  // Fetch user donations
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchUserDonations();
-    } else {
-      setIsLoading(false);
-    }
-  }, [isAuthenticated, user]);
-  
-  const fetchUserDonations = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Get recent donations for the user
-      const { data: donations, error } = await supabase
-        .from('donations')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
-        
-      if (error) throw error;
-      
-      if (donations) {
-        setRecentDonations(donations as Donation[]);
-        
-        // Calculate total donated
-        const total = donations.reduce((sum, donation) => sum + Number(donation.amount), 0);
-        setTotalDonated(total);
-        
-        // Count unique NGOs supported
-        const uniqueNgos = new Set(donations.map(donation => donation.ngo_name)).size;
-        setNgosSupported(uniqueNgos);
-      }
-    } catch (error) {
-      console.error("Error fetching donations:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  ];
 
   if (!isAuthenticated) {
     return (
@@ -86,17 +38,6 @@ const Dashboard = () => {
           <Button variant="outline" asChild>
             <a href="/register">Create Account</a>
           </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="container flex min-h-[80vh] flex-col items-center justify-center py-12 text-center">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -137,7 +78,7 @@ const Dashboard = () => {
           <CardContent className="flex items-center justify-between p-6">
             <div>
               <p className="text-sm text-muted-foreground">Total Donated</p>
-              <p className="text-3xl font-bold">₹{totalDonated.toLocaleString()}</p>
+              <p className="text-3xl font-bold">₹3,000</p>
             </div>
             <div className="rounded-full bg-primary/10 p-3 text-primary">
               <CreditCard className="h-6 w-6" />
@@ -148,7 +89,7 @@ const Dashboard = () => {
           <CardContent className="flex items-center justify-between p-6">
             <div>
               <p className="text-sm text-muted-foreground">NGOs Supported</p>
-              <p className="text-3xl font-bold">{ngosSupported}</p>
+              <p className="text-3xl font-bold">3</p>
             </div>
             <div className="rounded-full bg-primary/10 p-3 text-primary">
               <Heart className="h-6 w-6" />
@@ -159,7 +100,7 @@ const Dashboard = () => {
           <CardContent className="flex items-center justify-between p-6">
             <div>
               <p className="text-sm text-muted-foreground">Recurring Donations</p>
-              <p className="text-3xl font-bold">0</p>
+              <p className="text-3xl font-bold">1</p>
             </div>
             <div className="rounded-full bg-primary/10 p-3 text-primary">
               <Clock className="h-6 w-6" />
@@ -185,42 +126,29 @@ const Dashboard = () => {
           </div>
 
           <div className="space-y-4">
-            {recentDonations.length > 0 ? (
-              recentDonations.map((donation) => (
-                <Card key={donation.id}>
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="font-medium">{donation.ngo_name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(donation.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">₹{Number(donation.amount).toLocaleString()}</p>
-                      <Button variant="link" className="h-auto p-0 text-xs">
-                        Receipt
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <p className="text-muted-foreground">You haven't made any donations yet.</p>
-                  <Button className="mt-4" asChild>
-                    <a href="/ngos">Explore NGOs</a>
-                  </Button>
+            {recentDonations.map((donation) => (
+              <Card key={donation.id}>
+                <CardContent className="flex items-center justify-between p-4">
+                  <div>
+                    <p className="font-medium">{donation.ngo}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(donation.date).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">₹{donation.amount}</p>
+                    <Button variant="link" className="h-auto p-0 text-xs">
+                      Receipt
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
-            )}
+            ))}
           </div>
 
-          {recentDonations.length > 0 && (
-            <Button variant="outline" className="w-full">
-              View All Donations
-            </Button>
-          )}
+          <Button variant="outline" className="w-full">
+            View All Donations
+          </Button>
         </TabsContent>
         
         <TabsContent value="impact" className="space-y-6">

@@ -14,7 +14,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredPermission,
   redirectTo = "/login",
 }) => {
-  const { isAuthenticated, isLoading, hasPermission, user, getUserDashboardPath } = useAuth();
+  const { isAuthenticated, isLoading, hasPermission, user } = useAuth();
   const location = useLocation();
 
   // Show loading state
@@ -35,7 +35,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     let redirectPath = '/';
     
     if (isAuthenticated && user) {
-      redirectPath = getUserDashboardPath();
+      switch(user.role) {
+        case 'super_admin':
+          redirectPath = '/admin/dashboard';
+          break;
+        case 'ngo_admin':
+          redirectPath = '/ngo/dashboard';
+          break;
+        case 'donor':
+          redirectPath = '/dashboard';
+          break;
+        default:
+          redirectPath = '/';
+      }
     }
     
     return (

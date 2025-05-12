@@ -9,78 +9,7 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      donations: {
-        Row: {
-          amount: number
-          created_at: string | null
-          currency: string | null
-          donor_name: string | null
-          id: string
-          ngo_id: string | null
-          ngo_name: string
-          payment_method: string | null
-          status: string | null
-          user_id: string | null
-        }
-        Insert: {
-          amount: number
-          created_at?: string | null
-          currency?: string | null
-          donor_name?: string | null
-          id?: string
-          ngo_id?: string | null
-          ngo_name: string
-          payment_method?: string | null
-          status?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          currency?: string | null
-          donor_name?: string | null
-          id?: string
-          ngo_id?: string | null
-          ngo_name?: string
-          payment_method?: string | null
-          status?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          created_at: string | null
-          email: string
-          id: string
-          name: string | null
-          organization: string | null
-          role: string
-          updated_at: string | null
-          verification_status: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          id: string
-          name?: string | null
-          organization?: string | null
-          role: string
-          updated_at?: string | null
-          verification_status?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          id?: string
-          name?: string | null
-          organization?: string | null
-          role?: string
-          updated_at?: string | null
-          verification_status?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
