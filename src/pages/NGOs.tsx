@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -7,12 +8,27 @@ import NGOCard from "@/components/NGOCard";
 import NGOFilter from "@/components/NGOFilter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-import { getFeaturedNGOs, mockNGOs as allNGOs } from "@/data/mockData";
-
+// Fetch all NGOs from Supabase
 const fetchNGOs = async () => {
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  return allNGOs;
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('role', 'ngo_admin');
+    
+  if (error) throw error;
+  
+  // Format the data to match the expected NGO structure
+  return data.map(ngo => ({
+    id: ngo.id,
+    name: ngo.organization || 'Unnamed NGO',
+    description: ngo.description || 'No description provided',
+    category: ngo.ngo_type || 'Uncategorized',
+    location: ngo.location || 'Unknown location',
+    logo: "/placeholder.svg", // Default placeholder
+    verified: ngo.verification_status === 'approved'
+  }));
 };
 
 const NGOs = () => {
@@ -33,20 +49,19 @@ const NGOs = () => {
 
     if (search) {
       filtered = filtered.filter(ngo => 
-        ngo.name.toLowerCase().includes(search.toLowerCase()) ||
-        ngo.description.toLowerCase().includes(search.toLowerCase()) ||
-        ngo.location.toLowerCase().includes(search.toLowerCase())
+        (ngo.name && ngo.name.toLowerCase().includes(search.toLowerCase())) ||
+        (ngo.description && ngo.description.toLowerCase().includes(search.toLowerCase())) ||
+        (ngo.location && ngo.location.toLowerCase().includes(search.toLowerCase()))
       );
     }
 
     if (selectedCategories.length > 0) {
       filtered = filtered.filter(ngo => 
-        selectedCategories.includes(ngo.category)
+        ngo.category && selectedCategories.includes(ngo.category)
       );
     }
 
-    filtered = filtered.filter(ngo => ngo.verified === true);
-
+    // Show all NGOs, including pending ones
     setFilteredNGOs(filtered);
   }, [ngos, search, selectedCategories]);
 
@@ -58,7 +73,7 @@ const NGOs = () => {
     <div className="container py-12">
       <h1 className="text-3xl font-bold mb-2">NGO Directory</h1>
       <p className="text-muted-foreground mb-8">
-        Discover verified NGOs working in causes you care about
+        Discover NGOs working in causes you care about
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

@@ -37,10 +37,10 @@ const App = () => (
                 <Route path="about" element={<About />} />
                 <Route path="ngos" element={<NGOs />} />
                 <Route path="ngo/:id" element={<NGOProfile />} />
+                <Route path="contact" element={<Contact />} />
                 <Route path="login" element={<Login />} />
                 <Route path="register" element={<Register />} />
                 <Route path="forgot-password" element={<ForgotPassword />} />
-                <Route path="contact" element={<Contact />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
               
@@ -65,7 +65,6 @@ const App = () => (
                 <Route path="/" element={<Layout />}>
                   <Route path="ngo/dashboard" element={<Dashboard />} />
                   <Route path="ngo/profile" element={<Dashboard />} /> {/* Placeholder for NGO profile page */}
-                  <Route path="ngo/donations" element={<Dashboard />} /> {/* Placeholder for NGO donations page */}
                 </Route>
               </Route>
               

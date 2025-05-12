@@ -1,27 +1,67 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Heart, CreditCard, Clock, BarChart3, AlertCircle, Filter } from "lucide-react";
+import { CreditCard, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
   const { isAuthenticated, user } = useAuth();
-  
-  // Placeholder data for the dashboard
-  const recentDonations = [
-    { id: 1, ngo: "EduReach Foundation", amount: 1000, date: "2023-06-10" },
-    { id: 2, ngo: "GreenEarth Initiative", amount: 500, date: "2023-05-25" },
-    { id: 3, ngo: "HealthCare For All", amount: 2000, date: "2023-04-15" },
-  ];
+  const [donations, setDonations] = useState([]);
+  const [totalDonated, setTotalDonated] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const monthlyCauses = [
-    { name: "Education", amount: 1500, percentage: 50 },
-    { name: "Environment", amount: 900, percentage: 30 },
-    { name: "Healthcare", amount: 600, percentage: 20 },
-  ];
+  // Fetch user's donations
+  useEffect(() => {
+    const fetchDonations = async () => {
+      if (!isAuthenticated || !user) return;
+      
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('donations')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
+        
+        setDonations(data || []);
+        
+        // Calculate total donations
+        const total = data?.reduce((sum, donation) => sum + Number(donation.amount), 0) || 0;
+        setTotalDonated(total);
+      } catch (error) {
+        console.error("Error fetching donations:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDonations();
+    
+    // Set up real-time subscription for donations
+    const channel = supabase
+      .channel('public:donations')
+      .on('postgres_changes', 
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'donations',
+          filter: `user_id=eq.${user?.id}` 
+        }, 
+        (payload) => {
+          setDonations(current => [payload.new, ...current]);
+          setTotalDonated(current => current + Number(payload.new.amount));
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAuthenticated, user]);
 
   if (!isAuthenticated) {
     return (
@@ -73,167 +113,66 @@ const Dashboard = () => {
         </Card>
       )}
 
-      <div className="mb-8 grid gap-4 md:grid-cols-3">
+      <div className="mb-8">
         <Card>
           <CardContent className="flex items-center justify-between p-6">
             <div>
               <p className="text-sm text-muted-foreground">Total Donated</p>
-              <p className="text-3xl font-bold">₹3,000</p>
+              <p className="text-3xl font-bold">₹{totalDonated}</p>
             </div>
             <div className="rounded-full bg-primary/10 p-3 text-primary">
               <CreditCard className="h-6 w-6" />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="flex items-center justify-between p-6">
-            <div>
-              <p className="text-sm text-muted-foreground">NGOs Supported</p>
-              <p className="text-3xl font-bold">3</p>
-            </div>
-            <div className="rounded-full bg-primary/10 p-3 text-primary">
-              <Heart className="h-6 w-6" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center justify-between p-6">
-            <div>
-              <p className="text-sm text-muted-foreground">Recurring Donations</p>
-              <p className="text-3xl font-bold">1</p>
-            </div>
-            <div className="rounded-full bg-primary/10 p-3 text-primary">
-              <Clock className="h-6 w-6" />
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
-      <Tabs defaultValue="donations">
-        <TabsList className="mb-8 grid w-full grid-cols-3 lg:w-[400px]">
-          <TabsTrigger value="donations">Donations</TabsTrigger>
-          <TabsTrigger value="impact">Impact</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        </TabsList>
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold">My Donation History</h2>
         
-        <TabsContent value="donations" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Recent Donations</h2>
-            <Button variant="outline" size="sm">
-              <Filter className="mr-2 h-4 w-4" />
-              Filter
-            </Button>
-          </div>
-
+        {isLoading ? (
           <div className="space-y-4">
-            {recentDonations.map((donation) => (
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="flex items-center justify-between p-4">
+                  <div className="space-y-2">
+                    <div className="h-5 w-40 bg-muted rounded"></div>
+                    <div className="h-4 w-24 bg-muted rounded"></div>
+                  </div>
+                  <div className="h-6 w-16 bg-muted rounded"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : donations.length > 0 ? (
+          <div className="space-y-4">
+            {donations.map((donation) => (
               <Card key={donation.id}>
                 <CardContent className="flex items-center justify-between p-4">
                   <div>
-                    <p className="font-medium">{donation.ngo}</p>
+                    <p className="font-medium">{donation.ngo_name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(donation.date).toLocaleDateString()}
+                      {new Date(donation.created_at).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="font-medium">₹{donation.amount}</p>
-                    <Button variant="link" className="h-auto p-0 text-xs">
-                      Receipt
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
-
-          <Button variant="outline" className="w-full">
-            View All Donations
-          </Button>
-        </TabsContent>
-        
-        <TabsContent value="impact" className="space-y-6">
+        ) : (
           <Card>
-            <CardHeader>
-              <CardTitle>My Impact</CardTitle>
-              <CardDescription>
-                See how your donations have made a difference
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium">Monthly Causes</h3>
-                  <BarChart3 className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div className="space-y-4">
-                  {monthlyCauses.map((cause) => (
-                    <div key={cause.name} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{cause.name}</span>
-                        <span className="text-sm text-muted-foreground">
-                          ₹{cause.amount} ({cause.percentage}%)
-                        </span>
-                      </div>
-                      <Progress value={cause.percentage} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-md bg-muted p-4">
-                <h3 className="mb-2 text-lg font-medium">Impact Summary</h3>
-                <ul className="space-y-2 text-sm">
-                  <li>• Helped educate 5 children for a month</li>
-                  <li>• Contributed to planting 10 trees</li>
-                  <li>• Provided medical supplies for 3 families</li>
-                </ul>
-              </div>
+            <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+              <p className="mb-4 text-muted-foreground">You haven't made any donations yet.</p>
+              <Button asChild>
+                <a href="/ngos">Explore NGOs</a>
+              </Button>
             </CardContent>
           </Card>
-        </TabsContent>
-        
-        <TabsContent value="settings" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Settings</CardTitle>
-              <CardDescription>
-                Manage your profile and preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">Profile Information</h3>
-                <p className="text-sm text-muted-foreground">
-                  {user?.name || 'User'} • {user?.email}
-                </p>
-                <Button variant="outline" size="sm">
-                  Edit Profile
-                </Button>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">Notification Preferences</h3>
-                <p className="text-sm text-muted-foreground">
-                  Configure how and when you receive updates
-                </p>
-                <Button variant="outline" size="sm">
-                  Manage Notifications
-                </Button>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">Payment Methods</h3>
-                <p className="text-sm text-muted-foreground">
-                  Add or update your UPI IDs and other payment methods
-                </p>
-                <Button variant="outline" size="sm">
-                  Manage Payments
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
     </div>
   );
 };
