@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from '@supabase/supabase-js';
+import adminOperations from "@/utils/adminOperations";
 
 type UserRole = 'donor' | 'ngo_admin' | 'super_admin' | 'guest';
 type VerificationStatus = 'pending' | 'approved' | 'rejected';
@@ -218,14 +219,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             organization_name: name,
             user_role: 'ngo_admin',
             ngo_type: ngoType,
-            verification_status: 'pending'
+            verification_status: 'approved' // Auto-approve NGOs for now
           }
         }
       });
 
       if (error) throw error;
       
-      toast.success("Registration submitted! Your NGO profile is pending verification.");
+      toast.success("NGO registration successful!");
       navigate('/login?role=ngo');
     } catch (error: any) {
       toast.error(error.message || "Registration failed");

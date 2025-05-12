@@ -60,14 +60,6 @@ const App = () => (
                 </Route>
               </Route>
               
-              {/* Protected routes for NGO admins */}
-              <Route element={<ProtectedRoute requiredPermission="ngo_dashboard" />}>
-                <Route path="/" element={<Layout />}>
-                  <Route path="ngo/dashboard" element={<Dashboard />} />
-                  <Route path="ngo/profile" element={<Dashboard />} /> {/* Placeholder for NGO profile page */}
-                </Route>
-              </Route>
-              
               {/* Role-based redirects */}
               <Route path="/profile" element={<AuthenticatedRouteRedirect />} />
             </Routes>
@@ -89,8 +81,6 @@ const AuthenticatedRouteRedirect = () => {
   switch (user?.role) {
     case 'super_admin':
       return <Navigate to="/admin/dashboard" replace />;
-    case 'ngo_admin':
-      return <Navigate to="/ngo/dashboard" replace />;
     default: // donor or any other role
       return <Navigate to="/dashboard" replace />;
   }

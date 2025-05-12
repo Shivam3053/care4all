@@ -1,9 +1,9 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
-import { Moon, Sun, Menu, X, LogOut, User, Settings, Shield, Building } from "lucide-react";
+import { Moon, Sun, Menu, X, LogOut, User, Settings, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -61,15 +61,7 @@ const Navbar = () => {
           ...commonLinks,
           { name: "Admin Dashboard", path: "/admin/dashboard" },
           { name: "NGOs", path: "/ngos" },
-          { name: "Users", path: "/admin/dashboard?tab=users" },
-          { name: "Messages", path: "/admin/dashboard?tab=messages" },
-        ];
-      case 'ngo_admin':
-        return [
-          ...commonLinks,
-          { name: "NGO Dashboard", path: "/ngo/dashboard" },
-          { name: "Profile", path: "/ngo/profile" },
-          { name: "Donations", path: "/ngo/donations" },
+          { name: "Contact", path: "/contact" },
         ];
       case 'donor':
       default:
@@ -77,7 +69,7 @@ const Navbar = () => {
           ...commonLinks,
           { name: "Dashboard", path: "/dashboard" },
           { name: "NGOs", path: "/ngos" },
-          { name: "Donations", path: "/dashboard?tab=donations" },
+          { name: "Contact", path: "/contact" },
         ];
     }
   };
@@ -91,8 +83,6 @@ const Navbar = () => {
     switch(user.role) {
       case 'super_admin':
         return { name: "Admin", icon: <Shield className="h-4 w-4" /> };
-      case 'ngo_admin':
-        return { name: "NGO", icon: <Building className="h-4 w-4" /> };
       case 'donor':
       default:
         return { name: "Donor", icon: <User className="h-4 w-4" /> };
@@ -159,15 +149,6 @@ const Navbar = () => {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel className="flex items-center gap-2">
                     {roleDisplay.name} Account
-                    {user?.role === 'ngo_admin' && user?.verification_status && (
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        user.verification_status === 'approved' 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {user.verification_status === 'approved' ? 'Verified' : 'Pending'}
-                      </span>
-                    )}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   
@@ -177,14 +158,6 @@ const Navbar = () => {
                       <Link to="/admin/dashboard" className="flex w-full cursor-pointer items-center">
                         <Shield className="mr-2 h-4 w-4" />
                         Admin Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  {user?.role === 'ngo_admin' && (
-                    <DropdownMenuItem asChild>
-                      <Link to="/ngo/dashboard" className="flex w-full cursor-pointer items-center">
-                        <Building className="mr-2 h-4 w-4" />
-                        NGO Dashboard
                       </Link>
                     </DropdownMenuItem>
                   )}

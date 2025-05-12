@@ -22,7 +22,7 @@ const fetchNGOs = async () => {
   // Format the data to match the expected NGO structure
   return data.map(ngo => ({
     id: ngo.id,
-    name: ngo.organization || 'Unnamed NGO',
+    name: ngo.organization || ngo.name || 'Unnamed NGO',
     description: ngo.description || 'No description provided',
     category: ngo.ngo_type || 'Uncategorized',
     location: ngo.location || 'Unknown location',
@@ -47,6 +47,7 @@ const NGOs = () => {
 
     let filtered = ngos;
 
+    // Apply search filter
     if (search) {
       filtered = filtered.filter(ngo => 
         (ngo.name && ngo.name.toLowerCase().includes(search.toLowerCase())) ||
@@ -55,13 +56,14 @@ const NGOs = () => {
       );
     }
 
+    // Apply category filter
     if (selectedCategories.length > 0) {
       filtered = filtered.filter(ngo => 
         ngo.category && selectedCategories.includes(ngo.category)
       );
     }
 
-    // Show all NGOs, including pending ones
+    // Show all NGOs regardless of verification status
     setFilteredNGOs(filtered);
   }, [ngos, search, selectedCategories]);
 

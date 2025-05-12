@@ -29,9 +29,8 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail, Lock, User, Building, ArrowRight, Shield, InfoIcon } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Shield, InfoIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import NGORegistrationForm from "@/components/NGORegistrationForm";
 
 const Register = () => {
   const { registerDonor, registerSuperAdmin, isLoading } = useAuth();
@@ -43,7 +42,7 @@ const Register = () => {
   // Set initial tab based on URL parameter
   useEffect(() => {
     const tabParam = searchParams.get("tab");
-    if (tabParam && ["donor", "ngo", "admin"].includes(tabParam)) {
+    if (tabParam && ["donor", "admin"].includes(tabParam)) {
       setUserType(tabParam);
     }
   }, [searchParams]);
@@ -110,14 +109,10 @@ const Register = () => {
   return (
     <div className="container my-12">
       <Tabs defaultValue={userType} onValueChange={setUserType} className="space-y-6">
-        <TabsList className="grid w-full max-w-md mx-auto grid-cols-3">
+        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
           <TabsTrigger value="donor" className="flex items-center space-x-1">
             <User className="h-4 w-4" />
             <span>Donor</span>
-          </TabsTrigger>
-          <TabsTrigger value="ngo" className="flex items-center space-x-1">
-            <Building className="h-4 w-4" />
-            <span>NGO</span>
           </TabsTrigger>
           <TabsTrigger value="admin" className="flex items-center space-x-1">
             <Shield className="h-4 w-4" />
@@ -235,18 +230,11 @@ const Register = () => {
                   <Button variant="outline" className="w-full" asChild>
                     <Link to="/ngos">
                       Explore NGOs without an account
-                      <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                 </div>
               </CardFooter>
             </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="ngo">
-          <div className="max-w-4xl mx-auto">
-            <NGORegistrationForm />
           </div>
         </TabsContent>
 
@@ -348,7 +336,7 @@ const Register = () => {
                           <div className="flex flex-col space-y-2 mt-4">
                             <p className="text-sm font-medium">Super Admin Responsibilities:</p>
                             <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
-                              <li>Verify and approve NGO registrations</li>
+                              <li>Register and manage NGOs on the platform</li>
                               <li>Monitor donations and platform activity</li>
                               <li>Manage users and handle reports</li>
                               <li>Review and approve fundraising campaigns</li>

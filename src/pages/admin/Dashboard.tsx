@@ -1,764 +1,493 @@
-import { useEffect, useState } from "react";
+
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle, X, AlertTriangle, Search, Plus, UserCheck, Building, Mail, RefreshCcw, Filter } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import VerifiedBadge from "@/components/VerifiedBadge";
 import { toast } from "sonner";
-import { supabase, adminOperations } from "@/integrations/supabase/client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CheckCircle, XCircle, AlertCircle, PlusCircle, Trash2, Users, Building, DollarSign } from "lucide-react";
 
-const mockContactMessages = [
-  {
-    id: "201",
-    name: "Rahul Sharma",
-    email: "rahul.s@example.com",
-    message: "I would like to know more about volunteer opportunities at Care4All.",
-    date: "2023-06-15T10:30:00",
-    status: "unread"
-  },
-  {
-    id: "202",
-    name: "Priya Patel",
-    email: "priya.p@example.com",
-    message: "How can I organize a fundraising event for NGOs listed on your platform?",
-    date: "2023-06-14T14:45:00",
-    status: "read"
-  },
-  {
-    id: "203",
-    name: "Amit Verma",
-    email: "amit.v@example.com",
-    message: "I'm experiencing issues with the donation process. The payment gateway times out after selecting UPI.",
-    date: "2023-06-13T09:15:00",
-    status: "resolved"
-  }
-];
+import { useAuth } from "@/contexts/AuthContext";
+import adminOperations from "@/utils/adminOperations";
 
 const AdminDashboard = () => {
-  const { user, isAuthenticated, hasPermission } = useAuth();
-  const [pendingNGOs, setPendingNGOs] = useState([]);
-  const [verifiedNGOs, setVerifiedNGOs] = useState([]);
-  const [contactMessages, setContactMessages] = useState(mockContactMessages);
-  const [users, setUsers] = useState([]);
-  const [activeTab, setActiveTab] = useState("pending-ngos");
-  const [isLoading, setIsLoading] = useState(true);
-  const [apiError, setApiError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("add-ngo");
   
-  const [newNGO, setNewNGO] = useState({
-    name: "",
-    category: "",
-    description: "",
-    location: "",
-    email: "",
-    phone: "",
-    website: ""
+  // NGO form state
+  const [ngoName, setNgoName] = useState("");
+  const [ngoEmail, setNgoEmail] = useState("");
+  const [ngoPassword, setNgoPassword] = useState("");
+  const [ngoCategory, setNgoCategory] = useState("");
+  const [ngoDescription, setNgoDescription] = useState("");
+  const [ngoPhone, setNgoPhone] = useState("");
+  const [ngoAddress, setNgoAddress] = useState("");
+  const [ngoWebsite, setNgoWebsite] = useState("");
+  const [ngoRegistrationNo, setNgoRegistrationNo] = useState("");
+  const [ngoUpiId, setNgoUpiId] = useState("");
+  const [isAddingNgo, setIsAddingNgo] = useState(false);
+
+  // Fetch all users
+  const { data: users, isLoading: isLoadingUsers, error: usersError, refetch: refetchUsers } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: adminOperations.getAllUsers,
+  });
+  
+  // Fetch all donations
+  const { data: donations, isLoading: isLoadingDonations, error: donationsError } = useQuery({
+    queryKey: ['admin-donations'],
+    queryFn: adminOperations.getAllDonations,
   });
 
-  useEffect(() => {
-    fetchNGOData();
-    fetchUserData();
-  }, []);
-
-  const fetchNGOData = async () => {
-    setIsLoading(true);
-    setApiError(null);
-    
-    try {
-      const { pendingNGOs: pending, verifiedNGOs: verified, error } = await adminOperations.getAllNGOs();
-      
-      if (error) {
-        console.error("Error fetching NGO data:", error);
-        setApiError("Failed to load NGO data. Please try again.");
-        return;
-      }
-      
-      setPendingNGOs(pending);
-      setVerifiedNGOs(verified);
-    } catch (error) {
-      console.error("Error in NGO data fetch:", error);
-      setApiError("An unexpected error occurred while loading NGO data.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchUserData = async () => {
-    try {
-      const { data, error } = await adminOperations.getAllUsers();
-      
-      if (error) {
-        console.error("Error fetching user data:", error);
-        return;
-      }
-      
-      setUsers(data);
-    } catch (error) {
-      console.error("Error in user data fetch:", error);
-    }
-  };
-
-  const verifyNGO = async (ngoId: string) => {
-    try {
-      const { error } = await adminOperations.verifyNGO(ngoId);
-      
-      if (error) {
-        toast.error("Failed to verify NGO: " + error.message);
-        return;
-      }
-      
-      const ngoToVerify = pendingNGOs.find(ngo => ngo.id === ngoId);
-      if (ngoToVerify) {
-        setPendingNGOs(pendingNGOs.filter(ngo => ngo.id !== ngoId));
-        setVerifiedNGOs([...verifiedNGOs, { ...ngoToVerify, verified: true }]);
-        toast.success(`${ngoToVerify.name} has been verified successfully`);
-      }
-    } catch (error) {
-      console.error("Error verifying NGO:", error);
-      toast.error("An error occurred while verifying the NGO.");
-    }
-  };
-
-  const rejectNGO = async (ngoId: string) => {
-    try {
-      const { error } = await adminOperations.rejectNGO(ngoId);
-      
-      if (error) {
-        toast.error("Failed to reject NGO: " + error.message);
-        return;
-      }
-      
-      const ngoToReject = pendingNGOs.find(ngo => ngo.id === ngoId);
-      if (ngoToReject) {
-        setPendingNGOs(pendingNGOs.filter(ngo => ngo.id !== ngoId));
-        toast.success(`${ngoToReject.name} has been rejected`);
-      }
-    } catch (error) {
-      console.error("Error rejecting NGO:", error);
-      toast.error("An error occurred while rejecting the NGO.");
-    }
-  };
-
-  const deleteNGO = (ngoId: string) => {
-    const updatedVerifiedNGOs = verifiedNGOs.filter(ngo => ngo.id !== ngoId);
-    const ngoToDelete = verifiedNGOs.find(ngo => ngo.id === ngoId);
-    
-    setVerifiedNGOs(updatedVerifiedNGOs);
-    if (ngoToDelete) {
-      toast.success(`${ngoToDelete.name} has been deleted`);
-    }
-  };
-
-  const updateMessageStatus = (messageId: string, status: string) => {
-    const updatedMessages = contactMessages.map(message => 
-      message.id === messageId ? { ...message, status } : message
-    );
-    
-    setContactMessages(updatedMessages);
-    toast.success(`Message status updated to ${status}`);
-  };
-
+  // Handler to add a new NGO
   const handleAddNGO = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!ngoName || !ngoEmail || !ngoCategory) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    
     try {
-      const newNGOWithId = {
-        ...newNGO,
-        id: Math.random().toString(36).substr(2, 9),
-        logo: "/placeholder.svg",
-        registrationDate: new Date().toISOString().split('T')[0],
-        verified: true
-      };
+      setIsAddingNgo(true);
       
-      setVerifiedNGOs([...verifiedNGOs, newNGOWithId]);
-      
-      setNewNGO({
-        name: "",
-        category: "",
-        description: "",
-        location: "",
-        email: "",
-        phone: "",
-        website: ""
+      await adminOperations.addNGO({
+        name: ngoName,
+        email: ngoEmail,
+        password: ngoPassword,
+        category: ngoCategory,
+        description: ngoDescription,
+        address: ngoAddress,
+        phone: ngoPhone,
+        website: ngoWebsite,
+        registrationNo: ngoRegistrationNo,
+        upiId: ngoUpiId
       });
       
-      toast.success("New NGO added successfully");
-    } catch (error) {
+      toast.success("NGO added successfully!");
+      
+      // Reset form fields
+      setNgoName("");
+      setNgoEmail("");
+      setNgoPassword("");
+      setNgoCategory("");
+      setNgoDescription("");
+      setNgoPhone("");
+      setNgoAddress("");
+      setNgoWebsite("");
+      setNgoRegistrationNo("");
+      setNgoUpiId("");
+      
+      // Refresh user list
+      refetchUsers();
+      
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add NGO");
       console.error("Error adding NGO:", error);
-      toast.error("Failed to add NGO. Please try again.");
+    } finally {
+      setIsAddingNgo(false);
     }
   };
 
-  const handleNGOInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setNewNGO(prev => ({ ...prev, [name]: value }));
+  // Verify NGO handler
+  const handleVerifyNGO = async (ngoId: string) => {
+    try {
+      await adminOperations.verifyNGO(ngoId);
+      toast.success("NGO verified successfully");
+      refetchUsers();
+    } catch (error) {
+      console.error("Error verifying NGO:", error);
+      toast.error("Failed to verify NGO");
+    }
   };
 
-  if (!isAuthenticated || !hasPermission("admin_dashboard")) {
-    return (
-      <div className="container py-12 text-center">
-        <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-        <p className="mb-6 text-muted-foreground">
-          You don't have permission to access the admin dashboard.
-        </p>
-        <Button asChild>
-          <a href="/">Return to Home</a>
-        </Button>
-      </div>
-    );
-  }
+  // Reject NGO handler
+  const handleRejectNGO = async (ngoId: string) => {
+    try {
+      await adminOperations.rejectNGO(ngoId);
+      toast.success("NGO rejected");
+      refetchUsers();
+    } catch (error) {
+      console.error("Error rejecting NGO:", error);
+      toast.error("Failed to reject NGO");
+    }
+  };
+
+  const getNgos = () => {
+    if (!users?.data) return [];
+    return users.data.filter(user => user.role === 'ngo_admin');
+  };
+
+  const getDonors = () => {
+    if (!users?.data) return [];
+    return users.data.filter(user => user.role === 'donor');
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'text-green-500';
+      case 'rejected': 
+        return 'text-red-500';
+      default:
+        return 'text-amber-500';
+    }
+  };
 
   return (
     <div className="container py-12">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">
-            Manage NGOs, users, and platform settings
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="bg-primary/10 px-3 py-1 rounded-full text-primary text-sm flex items-center">
-            <UserCheck className="h-4 w-4 mr-1" />
-            Admin
-          </div>
-          <Avatar className="h-10 w-10">
-            <div className="bg-primary text-primary-foreground h-full w-full flex items-center justify-center text-lg font-semibold">
-              {user?.name?.[0] || 'A'}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Admin Dashboard</CardTitle>
+          <CardDescription>
+            Manage NGOs and users on the Care4All platform
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-4">
+            <div className="bg-secondary p-3 rounded-full">
+              <Building className="h-5 w-5" />
             </div>
-          </Avatar>
-        </div>
-      </div>
-
-      {apiError && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertTriangle className="h-4 w-4 mr-2" />
-          <AlertDescription>{apiError}</AlertDescription>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="ml-auto"
-            onClick={() => {
-              setApiError(null);
-              fetchNGOData();
-              fetchUserData();
-            }}
-          >
-            Retry
-          </Button>
-        </Alert>
-      )}
-
-      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-8">
-        <TabsList className="grid grid-cols-5 w-full">
-          <TabsTrigger value="pending-ngos" className="flex items-center gap-1">
-            <Building className="h-4 w-4" />
-            <span>Pending NGOs</span>
-            {pendingNGOs.length > 0 && (
-              <span className="bg-destructive text-destructive-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center ml-1">
-                {pendingNGOs.length}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="verified-ngos" className="flex items-center gap-1">
-            <CheckCircle className="h-4 w-4" />
-            <span>Verified NGOs</span>
-          </TabsTrigger>
-          <TabsTrigger value="add-ngo" className="flex items-center gap-1">
-            <Plus className="h-4 w-4" />
-            <span>Add NGO</span>
-          </TabsTrigger>
-          <TabsTrigger value="messages" className="flex items-center gap-1">
-            <Mail className="h-4 w-4" />
-            <span>Messages</span>
-            {contactMessages.filter(m => m.status === "unread").length > 0 && (
-              <span className="bg-destructive text-destructive-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center ml-1">
-                {contactMessages.filter(m => m.status === "unread").length}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-1">
-            <UserCheck className="h-4 w-4" />
-            <span>Users</span>
-          </TabsTrigger>
+            <div>
+              <p className="font-medium">{getNgos().length} NGOs</p>
+              <p className="text-sm text-muted-foreground">Registered on the platform</p>
+            </div>
+            
+            <div className="border-l h-12 mx-4"></div>
+            
+            <div className="bg-secondary p-3 rounded-full">
+              <Users className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-medium">{getDonors().length} Donors</p>
+              <p className="text-sm text-muted-foreground">Active users</p>
+            </div>
+            
+            <div className="border-l h-12 mx-4"></div>
+            
+            <div className="bg-secondary p-3 rounded-full">
+              <DollarSign className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-medium">{donations?.data?.length || 0} Donations</p>
+              <p className="text-sm text-muted-foreground">Processed through the platform</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid grid-cols-3 w-full max-w-md">
+          <TabsTrigger value="add-ngo">Add NGO</TabsTrigger>
+          <TabsTrigger value="manage-ngos">Manage NGOs</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="pending-ngos" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">NGOs Awaiting Verification</h2>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1"
-                onClick={fetchNGOData}
-                disabled={isLoading}
-              >
-                <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
-              </Button>
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
-                <Filter className="h-4 w-4" />
-                <span>Filter</span>
-              </Button>
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          ) : pendingNGOs.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="pt-6 text-center">
-                <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No Pending NGOs</h3>
-                <p className="text-muted-foreground mb-4">
-                  All NGO verification requests have been processed.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {pendingNGOs.map((ngo) => (
-                <Card key={ngo.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center">
-                        <img 
-                          src={ngo.logo} 
-                          alt={ngo.name} 
-                          className="h-12 w-12 object-contain"
-                        />
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold">{ngo.name}</h3>
-                          <div className="flex items-center gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => verifyNGO(ngo.id)}
-                              className="text-green-500 border-green-500 hover:bg-green-50"
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Verify
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => rejectNGO(ngo.id)}
-                              className="text-destructive border-destructive hover:bg-destructive/10"
-                            >
-                              <X className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
-                          </div>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{ngo.description}</p>
-                        <div className="text-sm">
-                          <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs mr-2">{ngo.category}</span>
-                          <span className="text-muted-foreground">{ngo.location}</span>
-                        </div>
-                        <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm mt-2">
-                          <span>📧 {ngo.email}</span>
-                          <span>📞 {ngo.phone}</span>
-                          <span>📅 Registered: {ngo.registrationDate}</span>
-                        </div>
-                        {ngo.documents && ngo.documents.length > 0 && (
-                          <div className="mt-2">
-                            <p className="text-xs font-medium mb-1">Documents:</p>
-                            <div className="flex gap-2">
-                              {ngo.documents.map(doc => (
-                                <span 
-                                  key={doc} 
-                                  className="text-xs bg-muted px-2 py-1 rounded flex items-center"
-                                >
-                                  {doc}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="verified-ngos" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Verified NGOs</h2>
-            <div className="flex gap-2 items-center">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search NGOs..." 
-                  className="pl-9 w-[250px]"
-                />
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1"
-                onClick={fetchNGOData}
-                disabled={isLoading}
-              >
-                <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
-              </Button>
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {verifiedNGOs.map((ngo) => (
-                <Card key={ngo.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="h-14 w-14 rounded-lg bg-muted flex items-center justify-center">
-                        <img 
-                          src={ngo.logo} 
-                          alt={ngo.name} 
-                          className="h-10 w-10 object-contain"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold">{ngo.name}</h3>
-                            <VerifiedBadge className="text-xs" />
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteNGO(ngo.id)}
-                            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          >
-                            <X className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
-                        </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2">{ngo.description}</p>
-                        <div className="flex items-center justify-between mt-2">
-                          <div>
-                            <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs">{ngo.category}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">{ngo.location}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="add-ngo" className="space-y-6">
+        
+        <TabsContent value="add-ngo">
           <Card>
             <CardHeader>
               <CardTitle>Add New NGO</CardTitle>
-              <CardDescription>
-                Manually add a new NGO to the platform
-              </CardDescription>
+              <CardDescription>Register a new NGO on the Care4All platform</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleAddNGO} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name">NGO Name *</Label>
+                    <Label htmlFor="ngoName">Organization Name *</Label>
                     <Input
-                      id="name"
-                      name="name"
-                      value={newNGO.name}
-                      onChange={handleNGOInputChange}
-                      placeholder="Enter NGO name"
+                      id="ngoName"
+                      placeholder="NGO Name"
+                      value={ngoName}
+                      onChange={(e) => setNgoName(e.target.value)}
                       required
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="category">Category *</Label>
-                    <Select 
-                      name="category" 
-                      value={newNGO.category}
-                      onValueChange={(value) => setNewNGO(prev => ({ ...prev, category: value }))}
+                    <Label htmlFor="ngoEmail">Email Address *</Label>
+                    <Input
+                      id="ngoEmail"
+                      type="email"
+                      placeholder="ngo@example.org"
+                      value={ngoEmail}
+                      onChange={(e) => setNgoEmail(e.target.value)}
                       required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="ngoPassword">Password *</Label>
+                    <Input
+                      id="ngoPassword"
+                      type="password"
+                      placeholder="Set a password"
+                      value={ngoPassword}
+                      onChange={(e) => setNgoPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="ngoCategory">Category *</Label>
+                    <Select value={ngoCategory} onValueChange={setNgoCategory} required>
+                      <SelectTrigger id="ngoCategory">
+                        <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Children & Youth">Children & Youth</SelectItem>
-                        <SelectItem value="Education">Education</SelectItem>
-                        <SelectItem value="Environment">Environment</SelectItem>
-                        <SelectItem value="Healthcare">Healthcare</SelectItem>
-                        <SelectItem value="Women Empowerment">Women Empowerment</SelectItem>
-                        <SelectItem value="Animal Welfare">Animal Welfare</SelectItem>
-                        <SelectItem value="Elderly Care">Elderly Care</SelectItem>
-                        <SelectItem value="Disaster Relief">Disaster Relief</SelectItem>
-                        <SelectItem value="Rural Development">Rural Development</SelectItem>
+                        <SelectItem value="education">Education</SelectItem>
+                        <SelectItem value="healthcare">Healthcare</SelectItem>
+                        <SelectItem value="environment">Environment</SelectItem>
+                        <SelectItem value="children">Children & Youth</SelectItem>
+                        <SelectItem value="women">Women Empowerment</SelectItem>
+                        <SelectItem value="elderly">Elderly Care</SelectItem>
+                        <SelectItem value="disabilities">Disabilities & Inclusion</SelectItem>
+                        <SelectItem value="animals">Animal Welfare</SelectItem>
+                        <SelectItem value="disaster">Disaster Relief</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={newNGO.email}
-                      onChange={handleNGOInputChange}
-                      placeholder="contact@ngo.org"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone *</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      value={newNGO.phone}
-                      onChange={handleNGOInputChange}
-                      placeholder="+91 98765 43210"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location *</Label>
-                    <Input
-                      id="location"
-                      name="location"
-                      value={newNGO.location}
-                      onChange={handleNGOInputChange}
-                      placeholder="City, State"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="website">Website</Label>
-                    <Input
-                      id="website"
-                      name="website"
-                      value={newNGO.website}
-                      onChange={handleNGOInputChange}
-                      placeholder="https://www.example.org"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2 col-span-full">
-                    <Label htmlFor="description">Description *</Label>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="ngoDescription">Description</Label>
                     <Textarea
-                      id="description"
-                      name="description"
-                      value={newNGO.description}
-                      onChange={handleNGOInputChange}
+                      id="ngoDescription"
                       placeholder="Describe the NGO's mission and work"
-                      rows={4}
-                      required
+                      value={ngoDescription}
+                      onChange={(e) => setNgoDescription(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="ngoPhone">Phone Number</Label>
+                    <Input
+                      id="ngoPhone"
+                      type="tel"
+                      placeholder="+91 9876543210"
+                      value={ngoPhone}
+                      onChange={(e) => setNgoPhone(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="ngoAddress">Address</Label>
+                    <Input
+                      id="ngoAddress"
+                      placeholder="Full address"
+                      value={ngoAddress}
+                      onChange={(e) => setNgoAddress(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="ngoWebsite">Website</Label>
+                    <Input
+                      id="ngoWebsite"
+                      type="url"
+                      placeholder="https://example.org"
+                      value={ngoWebsite}
+                      onChange={(e) => setNgoWebsite(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="ngoRegistrationNo">Registration Number</Label>
+                    <Input
+                      id="ngoRegistrationNo"
+                      placeholder="Official registration number"
+                      value={ngoRegistrationNo}
+                      onChange={(e) => setNgoRegistrationNo(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="ngoUpiId">UPI ID for Donations</Label>
+                    <Input
+                      id="ngoUpiId"
+                      placeholder="yourname@bank"
+                      value={ngoUpiId}
+                      onChange={(e) => setNgoUpiId(e.target.value)}
                     />
                   </div>
                 </div>
                 
-                <div className="pt-2">
-                  <Button type="submit" className="w-full">Add NGO</Button>
-                </div>
+                <Button type="submit" disabled={isAddingNgo} className="w-full">
+                  {isAddingNgo ? (
+                    <>
+                      <span className="animate-spin mr-2">⟳</span>
+                      Adding NGO...
+                    </>
+                  ) : (
+                    <>
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Add NGO
+                    </>
+                  )}
+                </Button>
               </form>
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="messages" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Contact Messages</h2>
-            <div className="flex gap-2 items-center">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search messages..." 
-                  className="pl-9 w-[250px]"
-                />
-              </div>
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
-                <Filter className="h-4 w-4" />
-                <span>Filter</span>
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {contactMessages.map((message) => (
-              <Card key={message.id} className={message.status === "unread" ? "border-primary" : ""}>
-                <CardContent className="p-4">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium">{message.name}</h3>
-                        {message.status === "unread" && (
-                          <span className="bg-primary text-primary-foreground text-xs rounded-full px-2 py-0.5">
-                            New
-                          </span>
-                        )}
+        
+        <TabsContent value="manage-ngos">
+          <Card>
+            <CardHeader>
+              <CardTitle>Manage NGOs</CardTitle>
+              <CardDescription>Review and manage registered NGOs</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingUsers ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="flex items-center space-x-4 py-3">
+                      <Skeleton className="h-12 w-12 rounded-full" />
+                      <div className="space-y-2 flex-1">
+                        <Skeleton className="h-4 w-1/3" />
+                        <Skeleton className="h-4 w-1/2" />
                       </div>
-                      <p className="text-sm text-primary">{message.email}</p>
-                      <p className="text-sm">{message.message}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(message.date).toLocaleString()}
-                      </p>
+                      <Skeleton className="h-8 w-20" />
                     </div>
-                    <div className="flex gap-2 self-end md:self-center">
-                      {message.status === "unread" && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => updateMessageStatus(message.id, "read")}
-                        >
-                          Mark as Read
-                        </Button>
-                      )}
-                      {message.status !== "resolved" && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => updateMessageStatus(message.id, "resolved")}
-                          className="text-green-500 border-green-500 hover:bg-green-50"
-                        >
-                          Mark as Resolved
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="users" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Manage Users</h2>
-            <div className="flex gap-2 items-center">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search users..." 
-                  className="pl-9 w-[250px]"
-                />
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1"
-                onClick={fetchUserData}
-                disabled={isLoading}
-              >
-                <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
-              </Button>
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {users.map((user) => (
-                <Card key={user.id}>
-                  <CardContent className="p-4">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-10 w-10">
-                            <div className="bg-primary text-primary-foreground h-full w-full flex items-center justify-center text-lg font-semibold">
-                              {user.name[0]}
-                            </div>
-                          </Avatar>
-                          <div>
-                            <h3 className="font-medium">{user.name}</h3>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                          <div className="flex items-center">
-                            <span className="font-medium mr-1">Role:</span>
-                            <span className={`px-2 py-0.5 rounded-full text-xs ${
-                              user.role === 'super_admin' 
-                                ? 'bg-primary text-primary-foreground' 
-                                : user.role === 'ngo_admin'
-                                  ? 'bg-blue-100 text-blue-700'
-                                  : 'bg-green-100 text-green-700'
-                            }`}>
-                              {user.role === 'super_admin' 
-                                ? 'Admin' 
-                                : user.role === 'ngo_admin'
-                                  ? 'NGO Admin'
-                                  : 'Donor'
-                              }
+                  ))}
+                </div>
+              ) : usersError ? (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>
+                    Failed to load NGOs. Please try again.
+                  </AlertDescription>
+                </Alert>
+              ) : getNgos().length === 0 ? (
+                <div className="text-center py-12">
+                  <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No NGOs Yet</h3>
+                  <p className="text-muted-foreground">
+                    Add an NGO using the "Add NGO" tab
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="w-[150px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {getNgos().map((ngo: any) => (
+                        <TableRow key={ngo.id}>
+                          <TableCell className="font-medium">{ngo.organization || ngo.name}</TableCell>
+                          <TableCell>{ngo.email}</TableCell>
+                          <TableCell>
+                            <span className={getStatusColor(ngo.verification_status)}>
+                              {ngo.verification_status === 'approved' ? 'Approved' :
+                               ngo.verification_status === 'rejected' ? 'Rejected' : 'Pending'}
                             </span>
-                          </div>
-                          <div>
-                            <span className="font-medium mr-1">Joined:</span>
-                            <span>{user.joinDate}</span>
-                          </div>
-                          {user.role === 'donor' && (
-                            <div>
-                              <span className="font-medium mr-1">Donations:</span>
-                              <span>{user.donations}</span>
-                            </div>
-                          )}
-                          {user.role === 'ngo_admin' && user.ngoName && (
-                            <div>
-                              <span className="font-medium mr-1">NGO:</span>
-                              <span>{user.ngoName}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-2 self-end md:self-center">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                        >
-                          View Details
-                        </Button>
-                        {user.role !== 'super_admin' && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="text-destructive border-destructive hover:bg-destructive/10"
-                          >
-                            {user.status === 'banned' ? 'Enable Account' : 'Disable Account'}
-                          </Button>
-                        )}
+                          </TableCell>
+                          <TableCell>
+                            {ngo.verification_status !== 'approved' && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleVerifyNGO(ngo.id)}
+                                className="text-green-500"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {ngo.verification_status !== 'rejected' && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => handleRejectNGO(ngo.id)}
+                                className="text-red-500"
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="users">
+          <Card>
+            <CardHeader>
+              <CardTitle>User Management</CardTitle>
+              <CardDescription>Manage donors and users</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingUsers ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="flex items-center space-x-4 py-3">
+                      <Skeleton className="h-12 w-12 rounded-full" />
+                      <div className="space-y-2 flex-1">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-4 w-1/3" />
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                  ))}
+                </div>
+              ) : usersError ? (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>
+                    Failed to load users. Please try again.
+                  </AlertDescription>
+                </Alert>
+              ) : getDonors().length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No donors registered yet</h3>
+                  <p className="text-muted-foreground">
+                    Users will appear here after registration
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Joined</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {getDonors().map((donor: any) => (
+                        <TableRow key={donor.id}>
+                          <TableCell className="font-medium">{donor.name || 'Unknown'}</TableCell>
+                          <TableCell>{donor.email}</TableCell>
+                          <TableCell>Donor</TableCell>
+                          <TableCell>{new Date(donor.created_at).toLocaleDateString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

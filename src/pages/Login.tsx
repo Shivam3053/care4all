@@ -13,7 +13,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail, Lock, User, Building, Shield, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Shield, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Tabs,
@@ -100,14 +100,10 @@ const Login = () => {
             onValueChange={setUserRole} 
             className="mb-6"
           >
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="donor" className="flex items-center space-x-2">
                 <User className="h-4 w-4" />
                 <span>Donor</span>
-              </TabsTrigger>
-              <TabsTrigger value="ngo" className="flex items-center space-x-2">
-                <Building className="h-4 w-4" />
-                <span>NGO</span>
               </TabsTrigger>
               <TabsTrigger value="admin" className="flex items-center space-x-2">
                 <Shield className="h-4 w-4" />
@@ -118,12 +114,6 @@ const Login = () => {
             <TabsContent value="donor">
               <p className="text-sm text-muted-foreground mb-4">
                 Sign in as a donor to support NGOs and track your donation history.
-              </p>
-            </TabsContent>
-            
-            <TabsContent value="ngo">
-              <p className="text-sm text-muted-foreground mb-4">
-                Sign in as an NGO to manage your profile, campaigns, and view donations.
               </p>
             </TabsContent>
             
@@ -210,9 +200,7 @@ const Login = () => {
           <div className="text-sm text-center">
             Don't have an account?{" "}
             <Link 
-              to={userRole === "ngo" ? "/register?tab=ngo" : 
-                  userRole === "admin" ? "/register?tab=admin" : 
-                  "/register"} 
+              to={userRole === "admin" ? "/register?tab=admin" : "/register"} 
               className="text-primary hover:underline"
             >
               Create an account
