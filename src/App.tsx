@@ -17,6 +17,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminLayout from "./components/layout/AdminLayout";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -52,11 +53,11 @@ const App = () => (
                 </Route>
               </Route>
               
-              {/* Protected routes for admins */}
+              {/* Protected routes for admins with dedicated admin layout */}
               <Route element={<ProtectedRoute requiredPermission="admin_dashboard" />}>
-                <Route path="/" element={<Layout />}>
-                  <Route path="admin/dashboard" element={<AdminDashboard />} />
-                  <Route path="admin/profile" element={<Dashboard />} /> {/* Placeholder for admin profile page */}
+                <Route path="admin" element={<AdminLayout />}>
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 </Route>
               </Route>
               

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
-import { Moon, Sun, Menu, X, LogOut, User, Settings, Shield } from "lucide-react";
+import { Moon, Sun, Menu, X, LogOut, User, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -23,6 +23,12 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Check if the current route is an admin route
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // If we're in an admin route, don't render the navbar
+  if (isAdminRoute) return null;
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -82,7 +88,7 @@ const Navbar = () => {
     
     switch(user.role) {
       case 'super_admin':
-        return { name: "Admin", icon: <Shield className="h-4 w-4" /> };
+        return { name: "Admin", icon: <User className="h-4 w-4" /> };
       case 'donor':
       default:
         return { name: "Donor", icon: <User className="h-4 w-4" /> };
@@ -156,7 +162,7 @@ const Navbar = () => {
                   {user?.role === 'super_admin' && (
                     <DropdownMenuItem asChild>
                       <Link to="/admin/dashboard" className="flex w-full cursor-pointer items-center">
-                        <Shield className="mr-2 h-4 w-4" />
+                        <User className="mr-2 h-4 w-4" />
                         Admin Dashboard
                       </Link>
                     </DropdownMenuItem>

@@ -32,21 +32,19 @@ export const addNGO = async (ngoData: {
     
     if (authError) throw authError;
     
-    // Step 2: Update the profile with additional information
+    // Step 2: Create or update the profile with additional information
     if (authData?.user) {
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({
-          description: ngoData.description,
-          location: ngoData.address,
+        .upsert({
+          id: authData.user.id,
+          email: ngoData.email,
+          role: 'ngo_admin',
+          name: ngoData.name,
+          organization: ngoData.name,
           verification_status: 'approved',
-          ngo_type: ngoData.category,
-          contact_phone: ngoData.phone,
-          website_url: ngoData.website,
-          registration_number: ngoData.registrationNo,
-          upi_id: ngoData.upiId
-        })
-        .eq('id', authData.user.id);
+          updated_at: new Date().toISOString()
+        });
       
       if (profileError) throw profileError;
     }

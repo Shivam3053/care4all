@@ -26,9 +26,11 @@ export const adminOperations = {
   // NGO management
   async verifyNGO(ngoId: string) {
     try {
-      const { data, error } = await supabase.auth.admin.updateUserById(ngoId, {
-        user_metadata: { verification_status: 'approved' }
-      });
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ verification_status: 'approved' })
+        .eq('id', ngoId)
+        .eq('role', 'ngo_admin');
       
       if (error) throw error;
       
@@ -41,9 +43,11 @@ export const adminOperations = {
   
   async rejectNGO(ngoId: string) {
     try {
-      const { data, error } = await supabase.auth.admin.updateUserById(ngoId, {
-        user_metadata: { verification_status: 'rejected' }
-      });
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ verification_status: 'rejected' })
+        .eq('id', ngoId)
+        .eq('role', 'ngo_admin');
       
       if (error) throw error;
       
@@ -57,16 +61,15 @@ export const adminOperations = {
   // Get all users by role - using custom RPC function since we can't directly query auth.users
   async getUsersByRole(role: string) {
     try {
-      // For now, we'll simulate this by getting all users and filtering client-side
-      const { data: users, error } = await supabase.auth.admin.listUsers();
+      // Get all profiles and filter by role
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', role);
       
       if (error) throw error;
       
-      const filteredUsers = users?.users.filter(user => 
-        user.user_metadata?.user_role === role
-      ) || [];
-      
-      return { data: filteredUsers, error: null };
+      return { data: profiles || [], error: null };
     } catch (error) {
       console.error("Error getting users by role:", error);
       return { data: [], error };
@@ -76,41 +79,41 @@ export const adminOperations = {
   // Get all NGOs (pending and verified)
   async getAllNGOs() {
     try {
-      const { data: users, error } = await supabase.auth.admin.listUsers();
+      // Get all profiles with ngo_admin role
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'ngo_admin');
       
       if (error) return { pendingNGOs: [], verifiedNGOs: [], error };
       
-      const ngos = users?.users.filter(user => 
-        user.user_metadata?.user_role === 'ngo_admin'
-      ) || [];
-      
-      const pendingNGOs = ngos
-        .filter(ngo => ngo.user_metadata?.verification_status !== 'approved')
+      const pendingNGOs = profiles
+        ?.filter(ngo => ngo.verification_status !== 'approved')
         .map(ngo => ({
           id: ngo.id,
-          name: ngo.user_metadata?.organization_name || 'Unnamed NGO',
-          category: ngo.user_metadata?.ngo_type || 'Uncategorized',
-          description: ngo.user_metadata?.description || 'No description provided',
-          location: ngo.user_metadata?.location || 'Unknown location',
+          name: ngo.organization || ngo.name || 'Unnamed NGO',
+          category: 'Uncategorized',
+          description: '',
+          location: '',
           logo: "/placeholder.svg",
-          registrationDate: new Date(ngo.created_at).toISOString().split('T')[0],
+          registrationDate: new Date(ngo.created_at || '').toISOString().split('T')[0],
           email: ngo.email,
-          phone: ngo.user_metadata?.phone || 'No phone provided',
+          phone: '',
           documents: [],
           verified: false
-        }));
+        })) || [];
       
-      const verifiedNGOs = ngos
-        .filter(ngo => ngo.user_metadata?.verification_status === 'approved')
+      const verifiedNGOs = profiles
+        ?.filter(ngo => ngo.verification_status === 'approved')
         .map(ngo => ({
           id: ngo.id,
-          name: ngo.user_metadata?.organization_name || 'Unnamed NGO',
-          category: ngo.user_metadata?.ngo_type || 'Uncategorized',
-          description: ngo.user_metadata?.description || 'No description provided',
-          location: ngo.user_metadata?.location || 'Unknown location',
+          name: ngo.organization || ngo.name || 'Unnamed NGO',
+          category: 'Uncategorized',
+          description: '',
+          location: '',
           logo: "/placeholder.svg",
           verified: true
-        }));
+        })) || [];
       
       return { pendingNGOs, verifiedNGOs, error: null };
     } catch (error) {
@@ -122,18 +125,21 @@ export const adminOperations = {
   // Get all users
   async getAllUsers() {
     try {
-      const { data: users, error } = await supabase.auth.admin.listUsers();
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
       
       if (error) return { data: [], error };
       
-      const formattedUsers = users?.users.map(user => ({
+      const formattedUsers = profiles?.map(user => ({
         id: user.id,
-        name: user.user_metadata?.full_name || user.user_metadata?.organization_name || 'Unknown User',
+        name: user.name || user.organization || 'Unknown User',
         email: user.email,
-        role: user.user_metadata?.user_role || 'donor',
-        joinDate: new Date(user.created_at).toISOString().split('T')[0],
-        ngoName: user.user_metadata?.organization_name,
-        status: user.banned ? 'banned' : 'active',
+        role: user.role || 'donor',
+        joinDate: new Date(user.created_at || '').toISOString().split('T')[0],
+        ngoName: user.organization,
+        status: 'active',
         donations: 0 // This would need to be populated from a donations table
       })) || [];
       

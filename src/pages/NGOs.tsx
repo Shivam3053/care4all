@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,16 +22,15 @@ const fetchNGOs = async () => {
   return data.map(ngo => ({
     id: ngo.id,
     name: ngo.organization || ngo.name || 'Unnamed NGO',
-    description: ngo.description || 'No description provided',
-    category: ngo.ngo_type || 'Uncategorized',
-    location: ngo.location || 'Unknown location',
+    description: ngo.organization ? `NGO working in various causes` : 'No description provided',
+    category: 'Uncategorized',
+    location: 'Unknown location',
     logo: "/placeholder.svg", // Default placeholder
     verified: ngo.verification_status === 'approved'
   }));
 };
 
 const NGOs = () => {
-  const { getVerifiedNGOs } = useAuth();
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [filteredNGOs, setFilteredNGOs] = useState([]);
