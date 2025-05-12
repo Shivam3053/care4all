@@ -1,7 +1,8 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, cleanupAuthState } from "@/integrations/supabase/client";
 import { User, Session } from '@supabase/supabase-js';
 
 type UserRole = 'donor' | 'ngo_admin' | 'super_admin' | 'guest';
@@ -14,6 +15,17 @@ interface AuthUser {
   name?: string;
   organization?: string;
   verification_status?: VerificationStatus;
+}
+
+interface ProfileData {
+  id: string;
+  email: string;
+  role: UserRole;
+  name?: string;
+  organization?: string;
+  verification_status?: VerificationStatus;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface AuthContextType {
@@ -44,14 +56,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Set up auth state listener FIRST to prevent missing auth events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         
         if (session?.user) {
           setIsAuthenticated(true);
+          // Defer data fetching to prevent deadlocks
           setTimeout(() => {
-            getUserDataFromMetadata(session.user);
+            getUserProfile(session.user);
           }, 0);
         } else {
           setUser(null);
@@ -61,11 +75,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
         setIsAuthenticated(true);
-        getUserDataFromMetadata(session.user);
+        getUserProfile(session.user);
       } else {
         setIsLoading(false);
       }
@@ -74,42 +89,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const getUserDataFromMetadata = (user: User) => {
+  const getUserProfile = async (authUser: User) => {
     try {
-      const metadata = user.user_metadata;
-      
-      if (!metadata) {
+      // Get profile data from our profiles table
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching user profile:", error);
         setUser({
-          id: user.id,
-          email: user.email || '',
+          id: authUser.id,
+          email: authUser.email || '',
           role: 'guest'
         });
         setIsLoading(false);
         return;
       }
 
-      const role = metadata.user_role as UserRole || 'guest';
-      
-      const userObject: AuthUser = {
-        id: user.id,
-        email: user.email || '',
-        role: role,
-        name: metadata.full_name || metadata.organization_name,
-      };
-      
-      if (role === 'ngo_admin') {
-        userObject.organization = metadata.organization_name;
-        userObject.verification_status = metadata.verification_status || 'pending';
+      if (profile) {
+        const userObject: AuthUser = {
+          id: authUser.id,
+          email: authUser.email || '',
+          role: profile.role as UserRole,
+          name: profile.name,
+          organization: profile.organization,
+          verification_status: profile.verification_status as VerificationStatus,
+        };
+        
+        setUser(userObject);
+      } else {
+        setUser({
+          id: authUser.id,
+          email: authUser.email || '',
+          role: 'guest'
+        });
       }
-      
-      if (role === 'super_admin') {
-        userObject.verification_status = metadata.verification_status || 'pending';
-      }
-      
-      setUser(userObject);
       setIsLoading(false);
     } catch (error) {
-      console.error("Error processing user metadata:", error);
+      console.error("Error processing user profile:", error);
       setUser(null);
       setIsAuthenticated(false);
       setIsLoading(false);
@@ -119,17 +139,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      
+      // Clean up existing auth state to prevent auth limbo
+      cleanupAuthState();
+      
+      // Try global sign out first
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error("Sign in error:", error);
         throw error;
       }
 
       toast.success("Successfully signed in!");
+      
+      if (data.user) {
+        // Force a page reload to ensure clean state
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1000);
+      }
     } catch (error: any) {
       console.error("Login attempt failed:", error);
       let errorMessage = "Login failed";
@@ -141,6 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       toast.error(errorMessage);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -149,9 +187,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       setIsLoading(true);
-      await supabase.auth.signOut();
+      
+      // Clean up auth state
+      cleanupAuthState();
+      
+      // Attempt global sign out
+      await supabase.auth.signOut({ scope: 'global' });
+      
       toast.success("You have been signed out");
-      navigate('/');
+      
+      // Force page reload for a clean state
+      window.location.href = '/login';
     } catch (error: any) {
       toast.error(error.message || "Sign out failed");
     } finally {
@@ -180,6 +226,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
+      // Clean up existing auth state
+      cleanupAuthState();
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -206,6 +255,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const registerNGO = async (email: string, password: string, name: string, ngoType: string) => {
     try {
       setIsLoading(true);
+      
+      // Clean up existing auth state
+      cleanupAuthState();
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -235,6 +287,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const registerSuperAdmin = async (email: string, password: string, name: string, secretCode: string) => {
     try {
       setIsLoading(true);
+      
+      // Clean up existing auth state
+      cleanupAuthState();
       
       if (secretCode !== "admin123") {
         throw new Error("Invalid admin registration code");
@@ -289,12 +344,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isNGOVerified = async (ngoId: string): Promise<boolean> => {
     try {
-      return new Promise(resolve => {
-        setTimeout(() => {
-          const isVerified = Math.random() > 0.3;
-          resolve(isVerified);
-        }, 300);
-      });
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('verification_status')
+        .eq('id', ngoId)
+        .eq('role', 'ngo_admin')
+        .single();
+        
+      if (error || !data) {
+        return false;
+      }
+      
+      return data.verification_status === 'approved';
     } catch (error) {
       console.error("Error checking NGO verification:", error);
       return false;
@@ -303,29 +364,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getVerifiedNGOs = async (): Promise<any[]> => {
     try {
-      return new Promise(resolve => {
-        setTimeout(() => {
-          const mockNGOs = [
-            {
-              id: "1",
-              name: "Children First Foundation",
-              type: "children",
-              description: "Supporting underprivileged children with education and healthcare",
-              location: "Mumbai, Maharashtra",
-              is_verified: true
-            },
-            {
-              id: "2",
-              name: "EcoLife Initiative",
-              type: "environment",
-              description: "Working towards a sustainable future through conservation efforts",
-              location: "Bengaluru, Karnataka",
-              is_verified: true
-            }
-          ];
-          resolve(mockNGOs);
-        }, 500);
-      });
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'ngo_admin')
+        .eq('verification_status', 'approved');
+        
+      if (error || !data) {
+        return [];
+      }
+      
+      return data;
     } catch (error) {
       console.error("Error fetching verified NGOs:", error);
       return [];
