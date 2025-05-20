@@ -22,14 +22,11 @@ import {
   Calendar,
   CreditCard,
   Link2,
-  Scan,
   Loader2,
 } from "lucide-react";
 import DonationForm from "@/components/DonationForm";
 import NGOGallery from "@/components/NGOGallery";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import ExtensionDemo from "@/components/ExtensionDemo";
 import { Link } from "react-router-dom";
 
 const NGOProfile = () => {
@@ -74,9 +71,6 @@ const NGOProfile = () => {
       });
     }
   };
-
-  // Add a function to show the analyzer in a dialog within the profile
-  const [analyzerOpen, setAnalyzerOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -335,26 +329,6 @@ const NGOProfile = () => {
 
           <div className="space-y-6">
             <DonationForm ngoName={ngo.name} upiId={ngo.upiId} />
-
-            {/* Add dialog for analyzer within the profile */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Info</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Dialog open={analyzerOpen} onOpenChange={setAnalyzerOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full">
-                      <Scan className="mr-2 h-4 w-4" />
-                      View NGO Info Card
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="p-0 border-none bg-transparent max-w-[350px]">
-                    <ExtensionDemo ngo={ngo} onClose={() => setAnalyzerOpen(false)} />
-                  </DialogContent>
-                </Dialog>
-              </CardContent>
-            </Card>
 
             <Card>
               <CardHeader>
