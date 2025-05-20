@@ -1,68 +1,40 @@
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import NGOCard from "@/components/NGOCard";
-import NGOFilter from "@/components/NGOFilter";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { getFeaturedNGOs, type NGO } from "@/data/mockData";
-
-// Fetch all NGOs from Supabase and blend with mock data
-const fetchNGOs = async () => {
-  const { data: profileData, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('role', 'ngo_admin');
-    
-  if (error) throw error;
-
-  // Get mock data for demonstration purposes
-  const mockNGOs = getFeaturedNGOs(10);
-  
-  // Format the data from Supabase to match the NGO structure with all required properties
-  const supabaseNGOs: NGO[] = profileData.map(ngo => ({
-    id: ngo.id,
-    name: ngo.organization || ngo.name || 'Unnamed NGO',
-    description: ngo.organization ? `NGO working in various causes` : 'No description provided',
-    category: ['Education', 'Healthcare', 'Environment', 'Animal Welfare', 'Children & Youth'][Math.floor(Math.random() * 5)],
-    location: 'India',
-    logo: "/placeholder.svg",
-    coverImage: "https://placehold.co/600x200/e2e8f0/64748b",
-    verified: ngo.verification_status === 'approved',
-    trustScore: Math.floor(Math.random() * 20) + 80,
-    foundedYear: 2000 + Math.floor(Math.random() * 22),
-    totalRaised: Math.floor(Math.random() * 3000000) + 500000,
-    supporters: Math.floor(Math.random() * 1000) + 100,
-    regNumber: `REG-${Math.floor(Math.random() * 900000) + 100000}`,
-    upiId: `${ngo.organization?.toLowerCase().replace(/\s/g, '')}@upi` || 'donation@upi',
-    phone: `91${Math.floor(Math.random() * 9000000000) + 1000000000}`,
-    email: ngo.email || 'contact@example.org',
-    website: `https://${ngo.organization?.toLowerCase().replace(/\s/g, '')}.org` || 'https://example.org',
-    team: [],
-    achievements: [],
-    images: []
-  }));
-
-  // Combine both sources of NGOs
-  return [...supabaseNGOs, ...mockNGOs];
-};
 
 const NGOs = () => {
   const [search, setSearch] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [ngos, setNgos] = useState<NGO[]>([]);
   const [filteredNGOs, setFilteredNGOs] = useState<NGO[]>([]);
+  
+  // Categories based on the image
+  const categories = [
+    "Children & Youth",
+    "Education",
+    "Environment",
+    "Healthcare",
+    "Women Empowerment",
+    "Animal Welfare",
+    "Elderly Care",
+    "Disaster Relief",
+    "Rural Development",
+    "Disability Support"
+  ];
 
-  const { data: ngos, isLoading, error } = useQuery({
-    queryKey: ['ngos'],
-    queryFn: fetchNGOs,
-  });
-
+  // Fetch sample NGOs
   useEffect(() => {
-    if (!ngos) return;
+    // Get 10 featured NGOs from our mock data
+    const mockNGOs = getFeaturedNGOs(10);
+    setNgos(mockNGOs);
+    setFilteredNGOs(mockNGOs);
+  }, []);
 
+  // Filter NGOs based on search and category
+  useEffect(() => {
     let filtered = [...ngos];
 
     // Apply search filter
@@ -70,92 +42,149 @@ const NGOs = () => {
       filtered = filtered.filter(ngo => 
         (ngo.name && ngo.name.toLowerCase().includes(search.toLowerCase())) ||
         (ngo.description && ngo.description.toLowerCase().includes(search.toLowerCase())) ||
-        (ngo.location && ngo.location.toLowerCase().includes(search.toLowerCase())) ||
-        (ngo.category && ngo.category.toLowerCase().includes(search.toLowerCase()))
+        (ngo.location && ngo.location.toLowerCase().includes(search.toLowerCase()))
       );
     }
 
     // Apply category filter
-    if (selectedCategories.length > 0) {
+    if (selectedCategory) {
       filtered = filtered.filter(ngo => 
-        ngo.category && selectedCategories.includes(ngo.category)
+        ngo.category === selectedCategory
       );
     }
 
     setFilteredNGOs(filtered);
-  }, [ngos, search, selectedCategories]);
+  }, [ngos, search, selectedCategory]);
 
-  const handleCategoryChange = (categories: string[]) => {
-    setSelectedCategories(categories);
+  // Handle category selection
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(prevCategory => 
+      prevCategory === category ? null : category
+    );
   };
 
   return (
-    <div className="container py-12 dark:bg-gray-900">
-      <h1 className="text-3xl font-bold mb-2">NGO Directory</h1>
-      <p className="text-muted-foreground mb-8">
-        Discover NGOs working in causes you care about
-      </p>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-1">
-          <Card className="sticky top-24 dark:border-gray-700 dark:bg-gray-800">
-            <CardContent className="pt-6">
-              <div className="mb-6">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search NGOs..."
-                    className="pl-10 dark:bg-gray-700 dark:border-gray-600"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+    <div className="container py-8 bg-background dark:bg-gray-900 min-h-screen">
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Left sidebar with search and filters */}
+        <div className="lg:w-1/4">
+          <Card className="p-6 bg-secondary/30 dark:bg-gray-800/50">
+            <div className="relative mb-6">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search NGOs..."
+                className="pl-10 dark:bg-gray-700 dark:border-gray-600"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-3">
+              <h3 className="font-medium">Filter by Category</h3>
+              {categories.map((category) => (
+                <div key={category} className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id={`category-${category}`}
+                    name="category"
+                    className="text-primary focus:ring-primary"
+                    checked={selectedCategory === category}
+                    onChange={() => handleCategoryChange(category)}
                   />
+                  <label 
+                    htmlFor={`category-${category}`}
+                    className="text-sm cursor-pointer"
+                  >
+                    {category}
+                  </label>
                 </div>
-              </div>
-              
-              <NGOFilter onCategoryChange={handleCategoryChange} />
-            </CardContent>
+              ))}
+            </div>
           </Card>
         </div>
 
-        <div className="lg:col-span-3">
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="dark:border-gray-700 dark:bg-gray-800">
-                  <CardContent className="p-6">
-                    <div className="flex gap-4">
-                      <Skeleton className="h-16 w-16 rounded-lg dark:bg-gray-700" />
-                      <div className="space-y-2 flex-1">
-                        <Skeleton className="h-4 w-1/2 dark:bg-gray-700" />
-                        <Skeleton className="h-4 w-full dark:bg-gray-700" />
-                        <Skeleton className="h-4 w-3/4 dark:bg-gray-700" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : error ? (
-            <div className="rounded-lg bg-destructive/10 p-4 text-destructive dark:bg-red-900/20 dark:text-red-300">
-              Error loading NGOs. Please try again.
-            </div>
-          ) : filteredNGOs.length === 0 ? (
-            <div className="rounded-lg bg-muted p-8 text-center dark:bg-gray-800">
-              <h3 className="text-lg font-medium mb-2">No NGOs Found</h3>
-              <p className="text-muted-foreground">
-                Try adjusting your search or filters to find NGOs.
-              </p>
+        {/* Right side with NGO listings */}
+        <div className="lg:w-3/4">
+          {filteredNGOs.length === 0 ? (
+            <div className="text-center p-8 bg-secondary/30 rounded-md">
+              <p>No NGOs found matching your search criteria.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-6">
               {filteredNGOs.map((ngo) => (
-                <NGOCard key={ngo.id} ngo={ngo} />
+                <NGOListItem key={ngo.id} ngo={ngo} />
               ))}
             </div>
           )}
         </div>
       </div>
     </div>
+  );
+};
+
+// NGO List Item Component
+const NGOListItem = ({ ngo }: { ngo: NGO }) => {
+  return (
+    <a href={`/ngo/${ngo.id}`} className="block">
+      <div className="bg-white dark:bg-gray-800 rounded-md overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+        <div className="relative">
+          <img 
+            src={ngo.coverImage || "https://placehold.co/600x200/e2e8f0/64748b"} 
+            alt={`${ngo.name} cover image`}
+            className="w-full h-48 object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "https://placehold.co/600x200/e2e8f0/64748b";
+            }}
+          />
+          
+          <div className="absolute left-4 top-4">
+            <div className="h-16 w-16 rounded-full overflow-hidden border-4 border-white">
+              <img 
+                src={ngo.logo || "/placeholder.svg"} 
+                alt={`${ngo.name} logo`}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/placeholder.svg";
+                }}
+              />
+            </div>
+          </div>
+          
+          {ngo.verified && (
+            <div className="absolute right-2 top-2 bg-white rounded-full p-1">
+              <svg className="h-5 w-5 text-green-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" 
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          )}
+          
+          <div className="absolute left-4 bottom-4 bg-green-500/90 text-white px-2 py-1 text-xs rounded">
+            Trust Score: {ngo.trustScore}
+          </div>
+          
+          <div className="absolute right-4 bottom-4 text-xs text-white">
+            Since {ngo.foundedYear}
+          </div>
+        </div>
+        
+        <div className="p-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-medium text-lg">{ngo.name}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{ngo.location}</p>
+            </div>
+            <span className="bg-secondary/50 text-xs px-2 py-1 rounded">
+              {ngo.category}
+            </span>
+          </div>
+          
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+            {ngo.description}
+          </p>
+        </div>
+      </div>
+    </a>
   );
 };
 
