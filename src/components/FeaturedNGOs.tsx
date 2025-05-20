@@ -10,6 +10,7 @@ const FeaturedNGOs = () => {
   const [ngos, setNgos] = useState<NGO[]>([]);
 
   useEffect(() => {
+    // Get 3 featured NGOs from our mock data
     setNgos(getFeaturedNGOs(3));
   }, []);
 

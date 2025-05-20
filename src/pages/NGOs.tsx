@@ -8,32 +8,43 @@ import NGOFilter from "@/components/NGOFilter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getFeaturedNGOs, type NGO } from "@/data/mockData";
 
-// Fetch all NGOs from Supabase
+// Fetch all NGOs from Supabase and blend with mock data
 const fetchNGOs = async () => {
-  const { data, error } = await supabase
+  const { data: profileData, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('role', 'ngo_admin');
     
   if (error) throw error;
+
+  // Get mock data for demonstration purposes
+  const mockNGOs = getFeaturedNGOs(10);
   
-  // Format the data to match the expected NGO structure
-  return data.map(ngo => ({
+  // Format the data from Supabase to match the NGO structure
+  const supabaseNGOs = profileData.map(ngo => ({
     id: ngo.id,
     name: ngo.organization || ngo.name || 'Unnamed NGO',
     description: ngo.organization ? `NGO working in various causes` : 'No description provided',
-    category: 'Uncategorized',
-    location: 'Unknown location',
-    logo: "/placeholder.svg", // Default placeholder
-    verified: ngo.verification_status === 'approved'
+    category: ['Education', 'Healthcare', 'Environment', 'Animal Welfare', 'Children & Youth'][Math.floor(Math.random() * 5)],
+    location: 'India',
+    logo: "/placeholder.svg",
+    coverImage: "https://placehold.co/600x200/e2e8f0/64748b",
+    verified: ngo.verification_status === 'approved',
+    trustScore: Math.floor(Math.random() * 20) + 80,
+    foundedYear: 2000 + Math.floor(Math.random() * 22),
+    images: []
   }));
+
+  // Combine both sources of NGOs
+  return [...supabaseNGOs, ...mockNGOs];
 };
 
 const NGOs = () => {
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [filteredNGOs, setFilteredNGOs] = useState([]);
+  const [filteredNGOs, setFilteredNGOs] = useState<NGO[]>([]);
 
   const { data: ngos, isLoading, error } = useQuery({
     queryKey: ['ngos'],
@@ -43,14 +54,15 @@ const NGOs = () => {
   useEffect(() => {
     if (!ngos) return;
 
-    let filtered = ngos;
+    let filtered = [...ngos];
 
     // Apply search filter
     if (search) {
       filtered = filtered.filter(ngo => 
         (ngo.name && ngo.name.toLowerCase().includes(search.toLowerCase())) ||
         (ngo.description && ngo.description.toLowerCase().includes(search.toLowerCase())) ||
-        (ngo.location && ngo.location.toLowerCase().includes(search.toLowerCase()))
+        (ngo.location && ngo.location.toLowerCase().includes(search.toLowerCase())) ||
+        (ngo.category && ngo.category.toLowerCase().includes(search.toLowerCase()))
       );
     }
 
@@ -61,7 +73,6 @@ const NGOs = () => {
       );
     }
 
-    // Show all NGOs regardless of verification status
     setFilteredNGOs(filtered);
   }, [ngos, search, selectedCategories]);
 
@@ -80,7 +91,7 @@ const NGOs = () => {
         <div className="lg:col-span-1">
           <Card className="sticky top-24">
             <CardContent className="pt-6">
-              <div className="mb-4">
+              <div className="mb-6">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -127,7 +138,7 @@ const NGOs = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredNGOs.map((ngo) => (
                 <NGOCard key={ngo.id} ngo={ngo} />
               ))}
