@@ -15,7 +15,7 @@ const FeaturedNGOs = () => {
   }, []);
 
   return (
-    <section className="bg-secondary/50 py-16">
+    <section className="bg-secondary/50 py-16 dark:bg-gray-800/50">
       <div className="container">
         <div className="mb-12 text-center">
           <h2 className="mb-2 text-3xl font-bold tracking-tight">
@@ -36,9 +36,9 @@ const FeaturedNGOs = () => {
 
         <div className="mt-12 text-center">
           <Button asChild>
-            <Link to="/ngos">
+            <Link to="/ngos" className="group">
               View All NGOs
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </Button>
         </div>

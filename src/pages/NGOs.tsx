@@ -22,8 +22,8 @@ const fetchNGOs = async () => {
   // Get mock data for demonstration purposes
   const mockNGOs = getFeaturedNGOs(10);
   
-  // Format the data from Supabase to match the NGO structure
-  const supabaseNGOs = profileData.map(ngo => ({
+  // Format the data from Supabase to match the NGO structure with all required properties
+  const supabaseNGOs: NGO[] = profileData.map(ngo => ({
     id: ngo.id,
     name: ngo.organization || ngo.name || 'Unnamed NGO',
     description: ngo.organization ? `NGO working in various causes` : 'No description provided',
@@ -34,6 +34,15 @@ const fetchNGOs = async () => {
     verified: ngo.verification_status === 'approved',
     trustScore: Math.floor(Math.random() * 20) + 80,
     foundedYear: 2000 + Math.floor(Math.random() * 22),
+    totalRaised: Math.floor(Math.random() * 3000000) + 500000,
+    supporters: Math.floor(Math.random() * 1000) + 100,
+    regNumber: `REG-${Math.floor(Math.random() * 900000) + 100000}`,
+    upiId: `${ngo.organization?.toLowerCase().replace(/\s/g, '')}@upi` || 'donation@upi',
+    phone: `91${Math.floor(Math.random() * 9000000000) + 1000000000}`,
+    email: ngo.email || 'contact@example.org',
+    website: `https://${ngo.organization?.toLowerCase().replace(/\s/g, '')}.org` || 'https://example.org',
+    team: [],
+    achievements: [],
     images: []
   }));
 
@@ -81,7 +90,7 @@ const NGOs = () => {
   };
 
   return (
-    <div className="container py-12">
+    <div className="container py-12 dark:bg-gray-900">
       <h1 className="text-3xl font-bold mb-2">NGO Directory</h1>
       <p className="text-muted-foreground mb-8">
         Discover NGOs working in causes you care about
@@ -89,14 +98,14 @@ const NGOs = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-1">
-          <Card className="sticky top-24">
+          <Card className="sticky top-24 dark:border-gray-700 dark:bg-gray-800">
             <CardContent className="pt-6">
               <div className="mb-6">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search NGOs..."
-                    className="pl-10"
+                    className="pl-10 dark:bg-gray-700 dark:border-gray-600"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
@@ -112,14 +121,14 @@ const NGOs = () => {
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <Card key={i}>
+                <Card key={i} className="dark:border-gray-700 dark:bg-gray-800">
                   <CardContent className="p-6">
                     <div className="flex gap-4">
-                      <Skeleton className="h-16 w-16 rounded-lg" />
+                      <Skeleton className="h-16 w-16 rounded-lg dark:bg-gray-700" />
                       <div className="space-y-2 flex-1">
-                        <Skeleton className="h-4 w-1/2" />
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-4 w-1/2 dark:bg-gray-700" />
+                        <Skeleton className="h-4 w-full dark:bg-gray-700" />
+                        <Skeleton className="h-4 w-3/4 dark:bg-gray-700" />
                       </div>
                     </div>
                   </CardContent>
@@ -127,11 +136,11 @@ const NGOs = () => {
               ))}
             </div>
           ) : error ? (
-            <div className="rounded-lg bg-destructive/10 p-4 text-destructive">
+            <div className="rounded-lg bg-destructive/10 p-4 text-destructive dark:bg-red-900/20 dark:text-red-300">
               Error loading NGOs. Please try again.
             </div>
           ) : filteredNGOs.length === 0 ? (
-            <div className="rounded-lg bg-muted p-8 text-center">
+            <div className="rounded-lg bg-muted p-8 text-center dark:bg-gray-800">
               <h3 className="text-lg font-medium mb-2">No NGOs Found</h3>
               <p className="text-muted-foreground">
                 Try adjusting your search or filters to find NGOs.

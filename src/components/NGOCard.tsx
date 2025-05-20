@@ -4,36 +4,40 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { type NGO } from "@/data/mockData";
 import { CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 interface NGOCardProps {
   ngo: NGO;
 }
 
 const NGOCard = ({ ngo }: NGOCardProps) => {
+  const [coverImageError, setCoverImageError] = useState(false);
+  const [logoImageError, setLogoImageError] = useState(false);
+  
+  // Fallback images
+  const fallbackCover = "https://placehold.co/600x200/e2e8f0/64748b";
+  const fallbackLogo = "/placeholder.svg";
+
   return (
     <Link to={`/ngo/${ngo.id}`} className="block h-full">
-      <Card className="h-full overflow-hidden transition-all hover:shadow-md">
-        <div className="relative h-48 overflow-hidden">
+      <Card className="h-full overflow-hidden transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+        <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-700">
           <img
-            src={ngo.coverImage || "https://placehold.co/600x200/e2e8f0/64748b"}
+            src={coverImageError ? fallbackCover : (ngo.coverImage || fallbackCover)}
             alt={`${ngo.name} cover`}
             className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = "https://placehold.co/600x200/e2e8f0/64748b";
-            }}
+            onError={() => setCoverImageError(true)}
           />
-          <div className="absolute left-4 top-4 h-16 w-16 overflow-hidden rounded-full border-4 border-white bg-white shadow-md">
+          <div className="absolute left-4 top-4 h-16 w-16 overflow-hidden rounded-full border-4 border-white bg-white shadow-md dark:border-gray-800 dark:bg-gray-800">
             <img
-              src={ngo.logo || "/placeholder.svg"}
+              src={logoImageError ? fallbackLogo : (ngo.logo || fallbackLogo)}
               alt={`${ngo.name} logo`}
               className="h-full w-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = "/placeholder.svg";
-              }}
+              onError={() => setLogoImageError(true)}
             />
           </div>
           {ngo.verified && (
-            <div className="absolute right-2 top-2 rounded-full bg-white p-1 shadow-md">
+            <div className="absolute right-2 top-2 rounded-full bg-white p-1 shadow-md dark:bg-gray-800">
               <CheckCircle2 className="h-5 w-5 text-green-600" />
             </div>
           )}
@@ -44,7 +48,7 @@ const NGOCard = ({ ngo }: NGOCardProps) => {
               <h3 className="text-lg font-semibold line-clamp-1">{ngo.name}</h3>
               <p className="text-sm text-muted-foreground">{ngo.location || "Unknown location"}</p>
             </div>
-            <Badge variant="outline" className="bg-secondary">
+            <Badge variant="outline" className="bg-secondary dark:bg-gray-700">
               {ngo.category || "Uncategorized"}
             </Badge>
           </div>
