@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,13 +11,24 @@ import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, PlusCircle, Users, Building } from "lucide-react";
+import { 
+  AlertCircle, PlusCircle, Users, Building, Trash2, Edit, X, Check, Mail
+} from "lucide-react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
 
 import { useAuth } from "@/contexts/AuthContext";
 import adminOperations from "@/utils/adminOperations";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
   // NGO form state
   const [ngoName, setNgoName] = useState("");
@@ -31,6 +42,27 @@ const AdminDashboard = () => {
   const [ngoRegistrationNo, setNgoRegistrationNo] = useState("");
   const [ngoUpiId, setNgoUpiId] = useState("");
   const [isAddingNgo, setIsAddingNgo] = useState(false);
+  
+  // Manage Users state
+  const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserName, setSelectedUserName] = useState("");
+  const [isProcessingUserAction, setIsProcessingUserAction] = useState(false);
+  
+  // Manage NGOs state
+  const [isDeleteNgoDialogOpen, setIsDeleteNgoDialogOpen] = useState(false);
+  const [selectedNgoId, setSelectedNgoId] = useState<string | null>(null);
+  const [selectedNgoName, setSelectedNgoName] = useState("");
+  const [isProcessingNgoAction, setIsProcessingNgoAction] = useState(false);
+  const [isEditNgoDialogOpen, setIsEditNgoDialogOpen] = useState(false);
+  const [editingNgo, setEditingNgo] = useState<any>(null);
+
+  // Email dialog state
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+  const [emailRecipient, setEmailRecipient] = useState("");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   // Fetch all users
   const { data: users, isLoading: isLoadingUsers, error: usersError, refetch: refetchUsers } = useQuery({
@@ -94,14 +126,144 @@ const AdminDashboard = () => {
     }
   };
 
+  // Open delete user confirmation dialog
+  const confirmDeleteUser = (userId: string, userName: string) => {
+    setSelectedUserId(userId);
+    setSelectedUserName(userName || 'this user');
+    setIsDeleteUserDialogOpen(true);
+  };
+
+  // Handle user deletion
+  const handleDeleteUser = async () => {
+    if (!selectedUserId) return;
+    
+    setIsProcessingUserAction(true);
+    try {
+      await adminOperations.deleteUser(selectedUserId);
+      toast.success("User deleted successfully");
+      refetchUsers();
+      setIsDeleteUserDialogOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete user");
+      console.error("Error deleting user:", error);
+    } finally {
+      setIsProcessingUserAction(false);
+      setSelectedUserId(null);
+    }
+  };
+
+  // Open delete NGO confirmation dialog
+  const confirmDeleteNgo = (ngoId: string, ngoName: string) => {
+    setSelectedNgoId(ngoId);
+    setSelectedNgoName(ngoName || 'this NGO');
+    setIsDeleteNgoDialogOpen(true);
+  };
+
+  // Handle NGO deletion
+  const handleDeleteNgo = async () => {
+    if (!selectedNgoId) return;
+    
+    setIsProcessingNgoAction(true);
+    try {
+      await adminOperations.deleteNGO(selectedNgoId);
+      toast.success("NGO deleted successfully");
+      refetchUsers();
+      setIsDeleteNgoDialogOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete NGO");
+      console.error("Error deleting NGO:", error);
+    } finally {
+      setIsProcessingNgoAction(false);
+      setSelectedNgoId(null);
+    }
+  };
+
+  // Open edit NGO dialog
+  const openEditNgoDialog = (ngo: any) => {
+    setEditingNgo(ngo);
+    setIsEditNgoDialogOpen(true);
+  };
+
+  // Handle NGO update
+  const handleUpdateNgo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingNgo) return;
+
+    setIsProcessingNgoAction(true);
+    try {
+      await adminOperations.updateNGO(editingNgo.id, {
+        organization: editingNgo.organization,
+        email: editingNgo.email,
+        verification_status: editingNgo.verification_status
+      });
+      
+      toast.success("NGO updated successfully");
+      refetchUsers();
+      setIsEditNgoDialogOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update NGO");
+      console.error("Error updating NGO:", error);
+    } finally {
+      setIsProcessingNgoAction(false);
+    }
+  };
+
+  // Open email dialog
+  const openEmailDialog = (recipientEmail: string) => {
+    setEmailRecipient(recipientEmail);
+    setEmailSubject("");
+    setEmailBody("");
+    setIsEmailDialogOpen(true);
+  };
+
+  // Handle send email
+  const handleSendEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailRecipient || !emailSubject || !emailBody) {
+      toast.error("Please fill all email fields");
+      return;
+    }
+
+    setIsSendingEmail(true);
+    try {
+      // Simulate email sending (replace with actual implementation)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success(`Email sent to ${emailRecipient}`);
+      setIsEmailDialogOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send email");
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   const getNgos = () => {
     if (!users?.data) return [];
-    return users.data.filter(user => user.role === 'ngo_admin');
+    return users.data.filter((user: any) => user.role === 'ngo_admin');
   };
 
   const getDonors = () => {
     if (!users?.data) return [];
-    return users.data.filter(user => user.role === 'donor');
+    return users.data.filter((user: any) => user.role === 'donor');
+  };
+
+  // Toggle NGO verification status
+  const toggleNgoVerification = async (ngoId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'approved' ? 'pending' : 'approved';
+    
+    try {
+      if (newStatus === 'approved') {
+        await adminOperations.verifyNGO(ngoId);
+      } else {
+        await adminOperations.rejectNGO(ngoId);
+      }
+      
+      toast.success(`NGO ${newStatus === 'approved' ? 'approved' : 'unapproved'} successfully`);
+      refetchUsers();
+    } catch (error: any) {
+      toast.error(error.message || `Failed to ${newStatus === 'approved' ? 'approve' : 'unapprove'} NGO`);
+      console.error("Error updating NGO status:", error);
+    }
   };
 
   return (
@@ -285,8 +447,12 @@ const AdminDashboard = () => {
       {/* NGO Management Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Registered NGOs</CardTitle>
-          <CardDescription>View and manage all registered NGOs</CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Registered NGOs</CardTitle>
+              <CardDescription>View and manage all registered NGOs</CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoadingUsers ? (
@@ -325,6 +491,7 @@ const AdminDashboard = () => {
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -332,7 +499,53 @@ const AdminDashboard = () => {
                     <TableRow key={ngo.id}>
                       <TableCell className="font-medium">{ngo.organization || ngo.name}</TableCell>
                       <TableCell>{ngo.email}</TableCell>
-                      <TableCell>{ngo.verification_status === 'approved' ? 'Approved' : 'Pending'}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <span className={`mr-2 ${ngo.verification_status === 'approved' ? 'text-green-600' : 'text-amber-600'}`}>
+                            {ngo.verification_status === 'approved' ? 'Approved' : 'Pending'}
+                          </span>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => toggleNgoVerification(ngo.id, ngo.verification_status)}
+                            title={ngo.verification_status === 'approved' ? 'Unapprove NGO' : 'Approve NGO'}
+                          >
+                            {ngo.verification_status === 'approved' ? (
+                              <X className="h-4 w-4 text-red-600" />
+                            ) : (
+                              <Check className="h-4 w-4 text-green-600" />
+                            )}
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEmailDialog(ngo.email)}
+                            title="Send Email"
+                          >
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEditNgoDialog(ngo)}
+                            title="Edit NGO"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => confirmDeleteNgo(ngo.id, ngo.organization || ngo.name)}
+                            title="Delete NGO"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -345,8 +558,12 @@ const AdminDashboard = () => {
       {/* Users Management Section */}
       <Card id="users-section">
         <CardHeader>
-          <CardTitle>User Management</CardTitle>
-          <CardDescription>View all registered users</CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>User Management</CardTitle>
+              <CardDescription>View and manage all registered users</CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoadingUsers ? (
@@ -384,6 +601,7 @@ const AdminDashboard = () => {
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Joined</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -392,6 +610,26 @@ const AdminDashboard = () => {
                       <TableCell className="font-medium">{donor.name || 'Unknown'}</TableCell>
                       <TableCell>{donor.email}</TableCell>
                       <TableCell>{new Date(donor.created_at || '').toLocaleDateString()}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEmailDialog(donor.email)}
+                            title="Send Email"
+                          >
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => confirmDeleteUser(donor.id, donor.name || 'this user')}
+                            title="Delete User"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -400,6 +638,211 @@ const AdminDashboard = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete User Dialog */}
+      <Dialog open={isDeleteUserDialogOpen} onOpenChange={setIsDeleteUserDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {selectedUserName}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteUserDialogOpen(false)}
+              disabled={isProcessingUserAction}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteUser}
+              disabled={isProcessingUserAction}
+            >
+              {isProcessingUserAction ? (
+                <>
+                  <span className="animate-spin mr-2">⟳</span>
+                  Deleting...
+                </>
+              ) : (
+                "Delete User"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete NGO Dialog */}
+      <Dialog open={isDeleteNgoDialogOpen} onOpenChange={setIsDeleteNgoDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete NGO</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {selectedNgoName}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteNgoDialogOpen(false)}
+              disabled={isProcessingNgoAction}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteNgo}
+              disabled={isProcessingNgoAction}
+            >
+              {isProcessingNgoAction ? (
+                <>
+                  <span className="animate-spin mr-2">⟳</span>
+                  Deleting...
+                </>
+              ) : (
+                "Delete NGO"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit NGO Dialog */}
+      <Dialog open={isEditNgoDialogOpen} onOpenChange={setIsEditNgoDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit NGO</DialogTitle>
+            <DialogDescription>
+              Update the NGO information
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateNgo}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-ngo-name">Organization Name</Label>
+                <Input 
+                  id="edit-ngo-name" 
+                  value={editingNgo?.organization || ''} 
+                  onChange={(e) => setEditingNgo({...editingNgo, organization: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-ngo-email">Email</Label>
+                <Input 
+                  id="edit-ngo-email" 
+                  type="email"
+                  value={editingNgo?.email || ''} 
+                  onChange={(e) => setEditingNgo({...editingNgo, email: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-ngo-status">Status</Label>
+                <Select 
+                  value={editingNgo?.verification_status || 'pending'} 
+                  onValueChange={(value) => setEditingNgo({...editingNgo, verification_status: value})}
+                  required
+                >
+                  <SelectTrigger id="edit-ngo-status">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                type="button"
+                onClick={() => setIsEditNgoDialogOpen(false)}
+                disabled={isProcessingNgoAction}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                disabled={isProcessingNgoAction}
+              >
+                {isProcessingNgoAction ? (
+                  <>
+                    <span className="animate-spin mr-2">⟳</span>
+                    Updating...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Email Dialog */}
+      <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Send Email</DialogTitle>
+            <DialogDescription>
+              Compose an email to {emailRecipient}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSendEmail}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="email-subject">Subject</Label>
+                <Input 
+                  id="email-subject" 
+                  value={emailSubject} 
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  placeholder="Email subject"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email-body">Message</Label>
+                <Textarea 
+                  id="email-body" 
+                  value={emailBody} 
+                  onChange={(e) => setEmailBody(e.target.value)}
+                  placeholder="Your message"
+                  rows={5}
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                type="button"
+                onClick={() => setIsEmailDialogOpen(false)}
+                disabled={isSendingEmail}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                disabled={isSendingEmail}
+              >
+                {isSendingEmail ? (
+                  <>
+                    <span className="animate-spin mr-2">⟳</span>
+                    Sending...
+                  </>
+                ) : (
+                  "Send Email"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

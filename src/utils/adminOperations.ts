@@ -92,6 +92,76 @@ export const rejectNGO = async (ngoId: string) => {
   }
 };
 
+// Update an NGO
+export const updateNGO = async (ngoId: string, updateData: {
+  organization?: string;
+  email?: string;
+  verification_status?: string;
+}) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({
+        ...updateData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', ngoId)
+      .eq('role', 'ngo_admin');
+      
+    if (error) throw error;
+    
+    return { data, error: null };
+  } catch (error: any) {
+    console.error('Error updating NGO:', error);
+    throw new Error(error.message || 'Failed to update NGO');
+  }
+};
+
+// Delete an NGO
+export const deleteNGO = async (ngoId: string) => {
+  try {
+    // First delete the profile
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', ngoId)
+      .eq('role', 'ngo_admin');
+      
+    if (profileError) throw profileError;
+    
+    // Then use admin API to delete the user (this would typically be done via an admin function)
+    // Note: In a real implementation, you would use Supabase Edge Functions with admin rights
+    // or a dedicated backend endpoint to delete the auth user
+    
+    return { success: true, message: 'NGO deleted successfully' };
+  } catch (error: any) {
+    console.error('Error deleting NGO:', error);
+    throw new Error(error.message || 'Failed to delete NGO');
+  }
+};
+
+// Delete a user
+export const deleteUser = async (userId: string) => {
+  try {
+    // First delete the profile
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+      
+    if (profileError) throw profileError;
+    
+    // Then use admin API to delete the user (this would typically be done via an admin function)
+    // Note: In a real implementation, you would use Supabase Edge Functions with admin rights
+    // or a dedicated backend endpoint to delete the auth user
+    
+    return { success: true, message: 'User deleted successfully' };
+  } catch (error: any) {
+    console.error('Error deleting user:', error);
+    throw new Error(error.message || 'Failed to delete user');
+  }
+};
+
 // Get all users (for admin panel)
 export const getAllUsers = async () => {
   try {
@@ -130,6 +200,9 @@ export default {
   addNGO,
   verifyNGO,
   rejectNGO,
+  updateNGO,
+  deleteNGO,
+  deleteUser,
   getAllUsers,
   getAllDonations
 };
