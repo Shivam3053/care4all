@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
-  AlertCircle, PlusCircle, Building, Trash2, Edit, X, Check, Mail, Upload, Image
+  AlertCircle, PlusCircle, Building, Trash2, Edit, X, Check, Mail, Upload, Image, Users
 } from "lucide-react";
 import { 
   Dialog, 
