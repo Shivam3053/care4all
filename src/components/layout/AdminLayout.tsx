@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
-import { Moon, Sun, LogOut, User, Building, LayoutDashboard } from "lucide-react";
+import { Moon, Sun, LogOut, Building, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -74,19 +74,6 @@ const AdminLayout = () => {
               >
                 <Building className="mr-2 h-4 w-4" />
                 Manage NGOs
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => {
-                  const usersElement = document.getElementById("users-section");
-                  if (usersElement) {
-                    usersElement.scrollIntoView({ behavior: "smooth" });
-                  }
-                }}
-              >
-                <User className="mr-2 h-4 w-4" />
-                Manage Users
               </Button>
             </nav>
           </div>

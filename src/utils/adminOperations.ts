@@ -52,11 +52,15 @@ export const addNGO = async (ngoData: {
       
       if (profileError) throw profileError;
       
-      // TODO: In a production application, upload the images to storage here
-      // This would typically involve:
-      // 1. Create a folder for the NGO
-      // 2. Upload each image with proper naming
-      // 3. Store the image paths in the database
+      // Handle image uploads if storage is available
+      if (ngoData.logo || ngoData.teamImage || ngoData.achievementImage || ngoData.galleryImages) {
+        console.log('Images provided but storage implementation not complete');
+        // TODO: In a production application, upload the images to storage here
+        // This would typically involve:
+        // 1. Create a folder for the NGO
+        // 2. Upload each image with proper naming
+        // 3. Store the image paths in the database
+      }
     }
     
     return { success: true, message: 'NGO added successfully' };
@@ -125,8 +129,12 @@ export const updateNGO = async (ngoId: string, updateData: {
       
     if (error) throw error;
     
-    // TODO: If images are provided in the updateData, upload them to storage
-    // and update the corresponding paths in the database
+    // Handle image updates if provided
+    if (updateData.logo || updateData.teamImage || updateData.achievementImage || updateData.galleryImages) {
+      console.log('Images provided for update but storage implementation not complete');
+      // TODO: If images are provided in the updateData, upload them to storage
+      // and update the corresponding paths in the database
+    }
     
     return { data, error: null };
   } catch (error: any) {
@@ -155,28 +163,6 @@ export const deleteNGO = async (ngoId: string) => {
   } catch (error: any) {
     console.error('Error deleting NGO:', error);
     throw new Error(error.message || 'Failed to delete NGO');
-  }
-};
-
-// Delete a user
-export const deleteUser = async (userId: string) => {
-  try {
-    // First delete the profile
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
-      
-    if (profileError) throw profileError;
-    
-    // Then use admin API to delete the user (this would typically be done via an admin function)
-    // Note: In a real implementation, you would use Supabase Edge Functions with admin rights
-    // or a dedicated backend endpoint to delete the auth user
-    
-    return { success: true, message: 'User deleted successfully' };
-  } catch (error: any) {
-    console.error('Error deleting user:', error);
-    throw new Error(error.message || 'Failed to delete user');
   }
 };
 
@@ -220,7 +206,6 @@ export default {
   rejectNGO,
   updateNGO,
   deleteNGO,
-  deleteUser,
   getAllUsers,
   getAllDonations
 };

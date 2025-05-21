@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
-  AlertCircle, PlusCircle, Users, Building, Trash2, Edit, X, Check, Mail, Upload, Image
+  AlertCircle, PlusCircle, Building, Trash2, Edit, X, Check, Mail, Upload, Image
 } from "lucide-react";
 import { 
   Dialog, 
@@ -48,12 +49,6 @@ const AdminDashboard = () => {
   const [ngoGalleryImages, setNgoGalleryImages] = useState<FileList | null>(null);
   const [ngoAchievementImage, setNgoAchievementImage] = useState<File | null>(null);
   
-  // Manage Users state
-  const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [selectedUserName, setSelectedUserName] = useState("");
-  const [isProcessingUserAction, setIsProcessingUserAction] = useState(false);
-  
   // Manage NGOs state
   const [isDeleteNgoDialogOpen, setIsDeleteNgoDialogOpen] = useState(false);
   const [selectedNgoId, setSelectedNgoId] = useState<string | null>(null);
@@ -69,7 +64,7 @@ const AdminDashboard = () => {
   const [emailBody, setEmailBody] = useState("");
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
-  // Fetch all users
+  // Fetch all users (to get NGOs)
   const { data: users, isLoading: isLoadingUsers, error: usersError, refetch: refetchUsers } = useQuery({
     queryKey: ['admin-users'],
     queryFn: adminOperations.getAllUsers,
@@ -124,7 +119,11 @@ const AdminDashboard = () => {
         phone: ngoPhone,
         website: ngoWebsite,
         registrationNo: ngoRegistrationNo,
-        upiId: ngoUpiId
+        upiId: ngoUpiId,
+        logo: ngoLogo,
+        teamImage: ngoTeamImage,
+        achievementImage: ngoAchievementImage,
+        galleryImages: ngoGalleryImages
       });
       
       toast.success("NGO added successfully!");
@@ -153,32 +152,6 @@ const AdminDashboard = () => {
       console.error("Error adding NGO:", error);
     } finally {
       setIsAddingNgo(false);
-    }
-  };
-
-  // Open delete user confirmation dialog
-  const confirmDeleteUser = (userId: string, userName: string) => {
-    setSelectedUserId(userId);
-    setSelectedUserName(userName || 'this user');
-    setIsDeleteUserDialogOpen(true);
-  };
-
-  // Handle user deletion
-  const handleDeleteUser = async () => {
-    if (!selectedUserId) return;
-    
-    setIsProcessingUserAction(true);
-    try {
-      await adminOperations.deleteUser(selectedUserId);
-      toast.success("User deleted successfully");
-      refetchUsers();
-      setIsDeleteUserDialogOpen(false);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete user");
-      console.error("Error deleting user:", error);
-    } finally {
-      setIsProcessingUserAction(false);
-      setSelectedUserId(null);
     }
   };
 
@@ -272,11 +245,6 @@ const AdminDashboard = () => {
     return users.data.filter((user: any) => user.role === 'ngo_admin');
   };
 
-  const getDonors = () => {
-    if (!users?.data) return [];
-    return users.data.filter((user: any) => user.role === 'donor');
-  };
-
   // Toggle NGO verification status
   const toggleNgoVerification = async (ngoId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'approved' ? 'pending' : 'approved';
@@ -306,15 +274,6 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{getNgos().length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="flex-1">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{getDonors().length}</div>
           </CardContent>
         </Card>
         
@@ -681,125 +640,6 @@ const AdminDashboard = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Users Management Section */}
-      <Card id="users-section">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>User Management</CardTitle>
-              <CardDescription>View and manage all registered users</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoadingUsers ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="flex items-center space-x-4 py-3">
-                  <Skeleton className="h-12 w-12 rounded-full" />
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-4 w-1/4" />
-                    <Skeleton className="h-4 w-1/3" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : usersError ? (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Failed to load users. Please try again.
-              </AlertDescription>
-            </Alert>
-          ) : getDonors().length === 0 ? (
-            <div className="text-center py-6">
-              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">No donors registered yet</h3>
-              <p className="text-muted-foreground">
-                Users will appear here after registration
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {getDonors().map((donor: any) => (
-                    <TableRow key={donor.id}>
-                      <TableCell className="font-medium">{donor.name || 'Unknown'}</TableCell>
-                      <TableCell>{donor.email}</TableCell>
-                      <TableCell>{new Date(donor.created_at || '').toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEmailDialog(donor.email)}
-                            title="Send Email"
-                          >
-                            <Mail className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => confirmDeleteUser(donor.id, donor.name || 'this user')}
-                            title="Delete User"
-                          >
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Delete User Dialog */}
-      <Dialog open={isDeleteUserDialogOpen} onOpenChange={setIsDeleteUserDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete {selectedUserName}? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDeleteUserDialogOpen(false)}
-              disabled={isProcessingUserAction}
-            >
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteUser}
-              disabled={isProcessingUserAction}
-            >
-              {isProcessingUserAction ? (
-                <>
-                  <span className="animate-spin mr-2">⟳</span>
-                  Deleting...
-                </>
-              ) : (
-                "Delete User"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete NGO Dialog */}
       <Dialog open={isDeleteNgoDialogOpen} onOpenChange={setIsDeleteNgoDialogOpen}>
