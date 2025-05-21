@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
-  AlertCircle, PlusCircle, Users, Building, Trash2, Edit, X, Check, Mail
+  AlertCircle, PlusCircle, Users, Building, Trash2, Edit, X, Check, Mail, Upload, Image
 } from "lucide-react";
 import { 
   Dialog, 
@@ -42,6 +41,12 @@ const AdminDashboard = () => {
   const [ngoRegistrationNo, setNgoRegistrationNo] = useState("");
   const [ngoUpiId, setNgoUpiId] = useState("");
   const [isAddingNgo, setIsAddingNgo] = useState(false);
+  
+  // NGO image state
+  const [ngoLogo, setNgoLogo] = useState<File | null>(null);
+  const [ngoTeamImage, setNgoTeamImage] = useState<File | null>(null);
+  const [ngoGalleryImages, setNgoGalleryImages] = useState<FileList | null>(null);
+  const [ngoAchievementImage, setNgoAchievementImage] = useState<File | null>(null);
   
   // Manage Users state
   const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
@@ -76,17 +81,38 @@ const AdminDashboard = () => {
     queryFn: adminOperations.getAllDonations,
   });
 
+  // Handle file change
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<File | null>>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setter(e.target.files[0]);
+    }
+  };
+
+  // Handle multiple file change
+  const handleMultipleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setNgoGalleryImages(e.target.files);
+    }
+  };
+
   // Handler to add a new NGO
   const handleAddNGO = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!ngoName || !ngoEmail || !ngoCategory || !ngoPassword) {
-      toast.error("Please fill in all required fields");
+    if (!ngoName || !ngoEmail || !ngoCategory || !ngoPassword || !ngoLogo || !ngoTeamImage || !ngoAchievementImage || !ngoGalleryImages) {
+      toast.error("Please fill in all required fields and upload all required images");
       return;
     }
     
     try {
       setIsAddingNgo(true);
+      
+      // In a production app, you would upload the images to storage here
+      // For now, we'll just demonstrate collecting the files
+      console.log("Logo:", ngoLogo?.name);
+      console.log("Team image:", ngoTeamImage?.name);
+      console.log("Achievement image:", ngoAchievementImage?.name);
+      console.log("Gallery images:", ngoGalleryImages.length);
       
       await adminOperations.addNGO({
         name: ngoName,
@@ -114,6 +140,10 @@ const AdminDashboard = () => {
       setNgoWebsite("");
       setNgoRegistrationNo("");
       setNgoUpiId("");
+      setNgoLogo(null);
+      setNgoTeamImage(null);
+      setNgoAchievementImage(null);
+      setNgoGalleryImages(null);
       
       // Refresh user list
       refetchUsers();
@@ -424,6 +454,103 @@ const AdminDashboard = () => {
                   value={ngoUpiId}
                   onChange={(e) => setNgoUpiId(e.target.value)}
                 />
+              </div>
+              
+              {/* Logo Upload */}
+              <div className="space-y-2">
+                <Label htmlFor="ngoLogo">NGO Logo *</Label>
+                <div className="border-2 border-dashed rounded-md p-4 text-center hover:bg-muted/50 transition-colors cursor-pointer">
+                  <input
+                    id="ngoLogo"
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, setNgoLogo)}
+                    required
+                  />
+                  <label htmlFor="ngoLogo" className="cursor-pointer flex flex-col items-center">
+                    <Upload className="h-5 w-5 text-muted-foreground mb-1" />
+                    <span className="text-sm font-medium">
+                      {ngoLogo ? ngoLogo.name : "Upload NGO Logo"}
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      PNG, JPG (max 2MB)
+                    </span>
+                  </label>
+                </div>
+              </div>
+              
+              {/* Team Image Upload */}
+              <div className="space-y-2">
+                <Label htmlFor="ngoTeamImage">Team Image *</Label>
+                <div className="border-2 border-dashed rounded-md p-4 text-center hover:bg-muted/50 transition-colors cursor-pointer">
+                  <input
+                    id="ngoTeamImage"
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, setNgoTeamImage)}
+                    required
+                  />
+                  <label htmlFor="ngoTeamImage" className="cursor-pointer flex flex-col items-center">
+                    <Users className="h-5 w-5 text-muted-foreground mb-1" />
+                    <span className="text-sm font-medium">
+                      {ngoTeamImage ? ngoTeamImage.name : "Upload Team Photo"}
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      PNG, JPG (max 2MB)
+                    </span>
+                  </label>
+                </div>
+              </div>
+              
+              {/* Achievement Image Upload */}
+              <div className="space-y-2">
+                <Label htmlFor="ngoAchievementImage">Achievement Image *</Label>
+                <div className="border-2 border-dashed rounded-md p-4 text-center hover:bg-muted/50 transition-colors cursor-pointer">
+                  <input
+                    id="ngoAchievementImage"
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, setNgoAchievementImage)}
+                    required
+                  />
+                  <label htmlFor="ngoAchievementImage" className="cursor-pointer flex flex-col items-center">
+                    <Image className="h-5 w-5 text-muted-foreground mb-1" />
+                    <span className="text-sm font-medium">
+                      {ngoAchievementImage ? ngoAchievementImage.name : "Upload Achievement Photo"}
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      PNG, JPG (max 2MB)
+                    </span>
+                  </label>
+                </div>
+              </div>
+              
+              {/* Gallery Images Upload */}
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="ngoGalleryImages">Gallery Images *</Label>
+                <div className="border-2 border-dashed rounded-md p-4 text-center hover:bg-muted/50 transition-colors cursor-pointer">
+                  <input
+                    id="ngoGalleryImages"
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    multiple
+                    onChange={handleMultipleFileChange}
+                    required
+                  />
+                  <label htmlFor="ngoGalleryImages" className="cursor-pointer flex flex-col items-center">
+                    <Upload className="h-5 w-5 text-muted-foreground mb-1" />
+                    <span className="text-sm font-medium">
+                      {ngoGalleryImages ? `${ngoGalleryImages.length} images selected` : "Upload Gallery Images"}
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      PNG, JPG (max 2MB each)
+                    </span>
+                  </label>
+                </div>
               </div>
             </div>
             

@@ -14,6 +14,10 @@ export const addNGO = async (ngoData: {
   website?: string;
   registrationNo?: string;
   upiId?: string;
+  logo?: File;
+  teamImage?: File;
+  achievementImage?: File;
+  galleryImages?: FileList;
 }) => {
   try {
     // Step 1: Create auth user with ngo_admin role
@@ -47,6 +51,12 @@ export const addNGO = async (ngoData: {
         });
       
       if (profileError) throw profileError;
+      
+      // TODO: In a production application, upload the images to storage here
+      // This would typically involve:
+      // 1. Create a folder for the NGO
+      // 2. Upload each image with proper naming
+      // 3. Store the image paths in the database
     }
     
     return { success: true, message: 'NGO added successfully' };
@@ -97,8 +107,13 @@ export const updateNGO = async (ngoId: string, updateData: {
   organization?: string;
   email?: string;
   verification_status?: string;
+  logo?: File;
+  teamImage?: File;
+  achievementImage?: File;
+  galleryImages?: FileList;
 }) => {
   try {
+    // First update the profile data
     const { data, error } = await supabase
       .from('profiles')
       .update({
@@ -109,6 +124,9 @@ export const updateNGO = async (ngoId: string, updateData: {
       .eq('role', 'ngo_admin');
       
     if (error) throw error;
+    
+    // TODO: If images are provided in the updateData, upload them to storage
+    // and update the corresponding paths in the database
     
     return { data, error: null };
   } catch (error: any) {
