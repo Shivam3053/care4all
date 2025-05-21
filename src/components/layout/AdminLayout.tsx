@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
-import { Moon, Sun, LogOut, LayoutDashboard } from "lucide-react";
+import { Moon, Sun, LogOut, Building, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -61,6 +61,19 @@ const AdminLayout = () => {
               >
                 <LayoutDashboard className="mr-2 h-4 w-4" />
                 Dashboard
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => {
+                  const dashboardElement = document.getElementById("add-ngo-section");
+                  if (dashboardElement) {
+                    dashboardElement.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+              >
+                <Building className="mr-2 h-4 w-4" />
+                Manage NGOs
               </Button>
             </nav>
           </div>
