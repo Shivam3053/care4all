@@ -1,8 +1,9 @@
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import adminOperations from "@/utils/adminOperations";
 
@@ -21,67 +22,48 @@ const AdminDashboard = () => {
       <div className="flex flex-col md:flex-row gap-4">
         <Card className="flex-1">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">NGOs</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{donations?.data?.filter((donation: any) => donation.ngo_id).length || 0}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="flex-1">
-          <CardHeader className="pb-2">
             <CardTitle className="text-lg">Donations</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{donations?.data?.length || 0}</div>
           </CardContent>
         </Card>
-
-        <Card className="flex-1">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Total Amount</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ₹{donations?.data?.reduce((sum: number, donation: any) => sum + Number(donation.amount), 0) || 0}
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
-      {/* Recent Donations */}
+      {/* Welcome Message */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Donations</CardTitle>
+          <CardTitle>Welcome to the Admin Dashboard</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            This is a simplified admin dashboard. Additional administrative features will be implemented in future updates.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Donations Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Platform Activity</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoadingDonations ? (
-            <div className="text-center py-6">Loading donations...</div>
+            <p>Loading platform statistics...</p>
           ) : donationsError ? (
-            <div className="flex items-center justify-center py-6 text-red-500">
-              <AlertCircle className="h-5 w-5 mr-2" />
-              <span>Failed to load donations data</span>
-            </div>
-          ) : donations?.data?.length > 0 ? (
-            <div className="space-y-4">
-              {donations.data.slice(0, 5).map((donation: any) => (
-                <div key={donation.id} className="flex items-center justify-between border-b pb-2">
-                  <div>
-                    <p className="font-medium">{donation.donor_name || "Anonymous"}</p>
-                    <p className="text-sm text-muted-foreground">to {donation.ngo_name}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold">₹{donation.amount}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(donation.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Failed to load donation data. Please try again.
+              </AlertDescription>
+            </Alert>
+          ) : donations?.data?.length === 0 ? (
+            <p className="text-muted-foreground">No donation activity recorded yet.</p>
           ) : (
-            <div className="text-center py-6 text-muted-foreground">
-              No donations recorded yet.
+            <div className="space-y-4">
+              <p className="text-muted-foreground">
+                Total donations processed: {donations?.data?.length || 0}
+              </p>
             </div>
           )}
         </CardContent>
